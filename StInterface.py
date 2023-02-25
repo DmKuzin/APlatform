@@ -34,6 +34,7 @@ discord_data = discord_logger.load_data(filename=constants.DISCORD_FILE_PATH)
 analyse_data = analyse_logger.load_data(filename=constants.ANALYSE_FILE_PATH)
 
 discord_bot = RequestScraper.DiscordBot(constants.AUTHORIZATION_TOKEN,
+                                        constants.SERVER_ID,
                                         constants.CHANNEL_ID,
                                         constants.DISCORD_FILE_PATH)
 
@@ -80,9 +81,9 @@ jscode_analyse = JsCode("""
                 }
             };
 """)
-
+columns = ['message', 'id', 'datetime', 'author', 'status', 'server_id', 'channel_id']
 discord_builder = GridOptionsBuilder.from_dataframe(discord_data)
-discord_builder.configure_columns(column_names=['message', 'id', 'datetime', 'author', 'status'],
+discord_builder.configure_columns(column_names=columns,
                                   cellStyle=jscode_discord,
                                   wrapText=True,
                                   resizable=True,
@@ -91,9 +92,11 @@ discord_builder.configure_columns(column_names=['message', 'id', 'datetime', 'au
 
 discord_builder.configure_selection(selection_mode='multiple', header_checkbox=True, use_checkbox=True)
 # discord_builder.configure_default_column(min_column_width=50)
-discord_builder.configure_column("id", hide=True)
-discord_builder.configure_column("datetime", hide=True)
-discord_builder.configure_column("status", hide=True)
+for col in columns:
+    discord_builder.configure_column(col, hide=True)
+
+discord_builder.configure_column('message', hide=False)
+discord_builder.configure_column('author', hide=False)
 # Set column header names
 discord_builder.configure_column("message", headerName="Message")
 discord_builder.configure_column("author", headerName="Author")
@@ -106,7 +109,7 @@ go_discord = discord_builder.build()
 # go_discord['getRowStyle'] = jscode
 
 analyse_builder = GridOptionsBuilder.from_dataframe(analyse_data)
-analyse_builder.configure_columns(column_names=['message', 'id', 'datetime', 'author', 'status'],
+analyse_builder.configure_columns(column_names=columns,
                                   cellStyle=jscode_analyse,
                                   wrapText=True,
                                   resizable=True,
@@ -115,9 +118,11 @@ analyse_builder.configure_columns(column_names=['message', 'id', 'datetime', 'au
 
 analyse_builder.configure_selection(selection_mode='multiple', header_checkbox=True, use_checkbox=True)
 # analyse_builder.configure_default_column(min_column_width=50)
-analyse_builder.configure_column("id", hide=True)
-analyse_builder.configure_column("datetime", hide=True)
-analyse_builder.configure_column("status", hide=True)
+for col in columns:
+    analyse_builder.configure_column(col, hide=True)
+
+analyse_builder.configure_column("message", hide=False)
+analyse_builder.configure_column("author", hide=False)
 # Set column header names
 analyse_builder.configure_column("message", headerName="Message")
 analyse_builder.configure_column("author", headerName="Author")

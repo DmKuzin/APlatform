@@ -7,8 +7,9 @@ import MessageProc
 
 
 class DiscordBot:
-    def __init__(self, token: str, channel_id: int, save_message_path: str):
+    def __init__(self, token: str, server_id: int, channel_id: int, save_message_path: str):
         self.token = token
+        self.server_id = server_id
         self.channel_id = channel_id
         self.headers = {
             'authorization': f'{self.token}'
@@ -80,7 +81,9 @@ class DiscordBot:
                                            messages[0]['id'],
                                            messages[0]['timestamp'],
                                            messages[0]['author']['username'],
-                                           status)
+                                           status,
+                                           self.server_id,
+                                           self.channel_id)
                 self.msg_loger.save_data(filename=self.save_message_path)
 
             time.sleep(1)
