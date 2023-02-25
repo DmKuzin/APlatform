@@ -20,6 +20,22 @@ class DiscordBot:
         self.msg_loger = MessageProc.MessageLogger(max_rows=constants.VIEW_SIZE)
         self.save_message_path = save_message_path
 
+    def get_channel_name(self):
+        channel_response = requests.get(f"https://discord.com/api/channels/{self.channel_id}", headers=self.headers)
+        if channel_response.status_code == 200:
+            channel_data = channel_response.json()
+            return channel_data["name"]
+        else:
+            return print(f"Error getting channel information: {channel_response.text}")
+
+    def get_server_name(self):
+        server_response = requests.get(f"https://discord.com/api/guilds/{self.server_id}", headers=self.headers)
+        if server_response.status_code == 200:
+            server_data = server_response.json()
+            return server_data["name"]
+        else:
+            return print(f"Error getting server information: {server_response.text}")
+
     def get_messages(self, max_num=10):
         """
         Get N historical messages from the Discord channel.
