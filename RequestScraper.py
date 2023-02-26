@@ -15,11 +15,15 @@ class DiscordBot:
             'authorization': f'{self.token}'
         }
         self.api_url = 'https://discord.com/api/v9'
-        self.last_message_id = None
 
         self.msg_loger = MessageProc.MessageLogger(max_rows=constants.VIEW_SIZE)
         self.msg_loger.load_data(filename=save_message_path)
         self.save_message_path = save_message_path
+
+        if len(self.msg_loger.data) > 0:
+            self.last_message_id = self.msg_loger.data[-1:]['id'].tolist()[0]
+        else:
+            self.last_message_id = None
 
         self.server_name = self.get_server_name()
         self.channel_name = self.get_channel_name()
@@ -107,7 +111,6 @@ class DiscordBot:
                 self.msg_loger.save_data(filename=self.save_message_path)
 
             time.sleep(1)
-
 
 # authorization_token = 'OTE1OTUxMTAwNzUyOTUzMzQ0.GH3xHy.Ky3XIeQtu_7cePNRlbKICzrR7Cfn-SzEIbGLws'
 # server_id = 1073733605995589702
