@@ -7,4 +7,8 @@ APP_LOGO_PATH = "logo/argonauts2.png"
 DISCORD_FILE_PATH = 'MessageLog/msg_table.pkl'
 ANALYSE_FILE_PATH = 'MessageLog/msg_analysis_table.pkl'
 
+HASHED_FILE_PATH = 'Authentication/hashed_pw.pkl'
+
+AUTHENTICATION_CONFIG_FILE_PATH: str = 'Authentication/authentication_config.yaml'
+
 VIEW_SIZE: int = 10
