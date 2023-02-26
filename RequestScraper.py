@@ -20,6 +20,9 @@ class DiscordBot:
         self.msg_loger = MessageProc.MessageLogger(max_rows=constants.VIEW_SIZE)
         self.save_message_path = save_message_path
 
+        self.server_name = self.get_server_name()
+        self.channel_name = self.get_channel_name()
+
     def get_channel_name(self):
         channel_response = requests.get(f"https://discord.com/api/channels/{self.channel_id}", headers=self.headers)
         if channel_response.status_code == 200:
@@ -98,8 +101,8 @@ class DiscordBot:
                                            messages[0]['timestamp'],
                                            messages[0]['author']['username'],
                                            status,
-                                           self.server_id,
-                                           self.channel_id)
+                                           self.server_name,
+                                           self.channel_name)
                 self.msg_loger.save_data(filename=self.save_message_path)
 
             time.sleep(1)

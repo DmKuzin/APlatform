@@ -81,7 +81,7 @@ jscode_analyse = JsCode("""
                 }
             };
 """)
-columns = ['message', 'id', 'datetime', 'author', 'status', 'server_id', 'channel_id']
+columns = ['message', 'id', 'datetime', 'author', 'status', 'server_name', 'channel_name']
 discord_builder = GridOptionsBuilder.from_dataframe(discord_data)
 discord_builder.configure_columns(column_names=columns,
                                   cellStyle=jscode_discord,
