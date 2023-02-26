@@ -17,14 +17,14 @@ st.sidebar.image(logo, width=300)
 
 server_select = st.sidebar.selectbox(
     "Servers",
-    ("Server-1", "Server-2", "Server-3")
+    ['MyTestServer']
 )
 
 # st.write('selected server:', server_select)
 
 channel_select = st.sidebar.selectbox(
     "Channels",
-    ("Channel-1", "Channel-2", "Channel-3")
+    ["general"]
 )
 
 discord_logger = MessageProc.MessageLogger(max_rows=constants.VIEW_SIZE)
@@ -33,10 +33,22 @@ analyse_logger = MessageProc.MessageLogger(max_rows=constants.VIEW_SIZE)
 discord_data = discord_logger.load_data(filename=constants.DISCORD_FILE_PATH)
 analyse_data = analyse_logger.load_data(filename=constants.ANALYSE_FILE_PATH)
 
-discord_bot = RequestScraper.DiscordBot(constants.AUTHORIZATION_TOKEN,
-                                        constants.SERVER_ID,
-                                        constants.CHANNEL_ID,
-                                        constants.DISCORD_FILE_PATH)
+# @st.cache_data
+# def load_data(logger, filename):
+#     logger.load_data(filename=filename)
+
+
+# discord_data = load_data(discord_logger, constants.DISCORD_FILE_PATH)
+# analyse_data = load_data(analyse_logger, constants.ANALYSE_FILE_PATH)
+
+
+@st.cache_resource
+def discord_bot():
+    return RequestScraper.DiscordBot(constants.AUTHORIZATION_TOKEN,
+                                     constants.SERVER_ID,
+                                     constants.CHANNEL_ID,
+                                     constants.DISCORD_FILE_PATH)
+
 
 # define the columns to be displayed
 # visible_columns = ['message', 'author']
@@ -136,7 +148,7 @@ go_analyse = analyse_builder.build()
 
 # go_analyse['getRowStyle'] = jscode
 
-
+@st.cache_data
 def submit_discord_messages_to_analyse():
     state_discord_table = st.session_state.discord_table_key
     selected_rows = state_discord_table['selectedItems']
@@ -157,6 +169,7 @@ def submit_discord_messages_to_analyse():
     added_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
 
 
+@st.cache_data
 def delete_analyse():
     # clear_logger = MessageProc.MessageLogger()
     # clear_logger.save_data(filename=constants.ANALYSE_FILE_PATH)
@@ -172,6 +185,7 @@ def delete_analyse():
     current_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
 
 
+@st.cache_data
 def submit_analyse_messages_to_discord():
     state_analyse_table = st.session_state.analyse_table_key
     selected_rows = state_analyse_table['selectedItems']
@@ -190,7 +204,8 @@ def submit_analyse_messages_to_discord():
     current_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
 
     summary = st.session_state.text_area_summary
-    discord_bot.send_message(summary)
+    discord_bot().send_message(summary)
+    #discord_bot.send_message(summary)
 
 
 discord_col, analyse_col = st.columns(2, gap='medium')

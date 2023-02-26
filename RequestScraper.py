@@ -18,6 +18,7 @@ class DiscordBot:
         self.last_message_id = None
 
         self.msg_loger = MessageProc.MessageLogger(max_rows=constants.VIEW_SIZE)
+        self.msg_loger.load_data(filename=save_message_path)
         self.save_message_path = save_message_path
 
         self.server_name = self.get_server_name()
