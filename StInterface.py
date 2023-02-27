@@ -55,11 +55,18 @@ authenticator = stauth.Authenticate(
     config['cookie']['expiry_days'],
     config['preauthorized']
 )
+# st.markdown('<h1 style="text-align: center;">-- ARGONAUTS --</h1>', unsafe_allow_html=True)
 # --- USER AUTHENTICATION ---
 name, authentication_status, username = authenticator.login("Login", "main")
 
+if authentication_status == False:
+    st.error('Username/password is incorrect')
+if authentication_status == None:
+    st.warning('Please enter your username and password')
+
 if authentication_status:
 
+    st.sidebar.markdown('<h1 style="text-align: center;">-- ARGONAUTS --</h1>', unsafe_allow_html=True)
     st.sidebar.image(logo, width=300)
 
     st.sidebar.selectbox("Servers", ['MyTestServer'], key='server_select')
@@ -187,7 +194,7 @@ if authentication_status:
 
     # go_analyse['getRowStyle'] = jscode
 
-    @st.cache_data
+    #@st.cache_data
     def submit_discord_messages_to_analyse():
         state_discord_table = st.session_state.discord_table_key
         selected_rows = state_discord_table['selectedItems']
@@ -208,7 +215,7 @@ if authentication_status:
         added_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
 
 
-    @st.cache_data
+    #@st.cache_data
     def delete_analyse():
         # clear_logger = MessageProc.MessageLogger()
         # clear_logger.save_data(filename=constants.ANALYSE_FILE_PATH)
@@ -224,7 +231,7 @@ if authentication_status:
         current_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
 
 
-    @st.cache_data
+    #@st.cache_data
     def submit_analyse_messages_to_discord():
         state_analyse_table = st.session_state.analyse_table_key
         selected_rows = state_analyse_table['selectedItems']
@@ -256,8 +263,8 @@ if authentication_status:
                                    gridOptions=go_discord,
                                    height=600,
                                    width=150,
+                                   fit_columns_on_grid_load=True,
                                    columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
-                                   # fit_columns_on_grid_load=True,
                                    reload_data=True,
                                    allow_unsafe_jscode=True,
                                    key='discord_table_key')
@@ -271,7 +278,7 @@ if authentication_status:
                                    gridOptions=go_analyse,
                                    height=600,
                                    width=150,
-                                   # fit_columns_on_grid_load=True,
+                                   fit_columns_on_grid_load=True,
                                    columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
                                    reload_data=True,
                                    allow_unsafe_jscode=True,
