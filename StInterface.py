@@ -11,7 +11,6 @@ import RequestScraper
 import MessageProc
 import yaml
 
-
 # for k, v in st.session_state.items():
 #     st.write(k)
 #     #st.write(v)
@@ -50,13 +49,30 @@ if authentication_status:
     st.sidebar.markdown('<h1 style="text-align: center;">-- ARGONAUTS --</h1>', unsafe_allow_html=True)
     st.sidebar.image(logo, width=300)
 
-    st.sidebar.selectbox("Servers", ['MyTestServer'], key='server_select')
-    st.sidebar.selectbox("Channels", ["general"], key='channel_select')
+    # Read servers table
+    servers_table = pd.read_csv(constants.SERVERS_TABLE_PATH)
+    server_names = servers_table['server_name'].to_list()
+
+    server_selected = st.sidebar.selectbox("Servers", server_names, key='server_select')
+    channels_available = servers_table[servers_table['server_name'] == server_selected]['channel_name'].to_list()
+
+    server_id = servers_table[servers_table['server_name'] == server_selected]['server_id'].to_list()[0]
+
+    channel_selected = st.sidebar.selectbox("Channels", channels_available, key='channel_select')
+
+    channel_id = servers_table[servers_table['channel_name'] == channel_selected]['channel_id'].to_list()[0]
+
     st.sidebar.write(f'User: {name}')
     authenticator.logout('Logout', "sidebar")
 
-    discord_logger = MessageProc.MessageLogger(max_rows=constants.VIEW_SIZE)
-    analyse_logger = MessageProc.MessageLogger(max_rows=constants.VIEW_SIZE)
+    # Create Discord channel listener
+    discord_listener = RequestScraper.DiscordBot(constants.AUTHORIZATION_TOKEN,
+                                                 server_id,
+                                                 channel_id,
+                                                 constants.DISCORD_FILE_PATH)
+
+    discord_logger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
+    analyse_logger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
 
     discord_data = discord_logger.load_data_from_file(filename=constants.DISCORD_FILE_PATH)
     analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
@@ -136,7 +152,8 @@ if authentication_status:
                                       flex=1,
                                       autoHeight=True)
 
-    discord_builder.configure_selection(selection_mode='multiple', pre_selected_rows=[selected_row], header_checkbox=True, use_checkbox=True)
+    discord_builder.configure_selection(selection_mode='multiple', pre_selected_rows=[selected_row],
+                                        header_checkbox=True, use_checkbox=True)
     # discord_builder.configure_default_column(min_column_width=50)
     for col in columns:
         discord_builder.configure_column(col, hide=True)
@@ -150,7 +167,7 @@ if authentication_status:
     # discord_builder.configure_column("message", {"width": 10})
     # discord_builder.configure_column('message', width=100)
     discord_builder.configure_side_bar()
-    #discord_builder.configure_pagination()
+    # discord_builder.configure_pagination()
     go_discord = discord_builder.build()
     # go_discord['getRowStyle'] = jscode
 
@@ -158,8 +175,7 @@ if authentication_status:
 
     go_discord.update(scroll)
 
-
-    #st.write(go_discord)
+    # st.write(go_discord)
 
     analyse_builder = GridOptionsBuilder.from_dataframe(analyse_data)
     analyse_builder.configure_columns(column_names=columns,
@@ -183,13 +199,13 @@ if authentication_status:
     # analyse_builder.configure_grid_options(groupHeaderHeight=75)
     # analyse_builder.configure_column('message', width=100)
     analyse_builder.configure_side_bar()
-    #analyse_builder.configure_pagination()
+    # analyse_builder.configure_pagination()
     go_analyse = analyse_builder.build()
 
 
     # go_analyse['getRowStyle'] = jscode
 
-    #@st.cache_data
+    # @st.cache_data
     def submit_discord_messages_to_analyse():
         state_discord_table = st.session_state.discord_table_key
         selected_rows = state_discord_table['selectedItems']
@@ -210,7 +226,7 @@ if authentication_status:
         added_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
 
 
-    #@st.cache_data
+    # @st.cache_data
     def delete_analyse():
         # clear_logger = MessageProc.MessageLogger()
         # clear_logger.save_data(filename=constants.ANALYSE_FILE_PATH)
@@ -226,7 +242,7 @@ if authentication_status:
         current_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
 
 
-    #@st.cache_data
+    # @st.cache_data
     def submit_analyse_messages_to_discord():
         state_analyse_table = st.session_state.analyse_table_key
         selected_rows = state_analyse_table['selectedItems']
@@ -248,10 +264,16 @@ if authentication_status:
         discord_bot().send_message(summary)
         # discord_bot.send_message(summary)
 
+
     def add_new_messages_from_discord():
         state_discord_table = st.session_state.discord_table_key
+        # Read the latest message
+        discord_listener.read_latest_messages()
 
-        #st.write(state_discord_table)
+
+    def add_historical_messages_from_discord():
+        # Get VIEW_SIZE latest messages from discord channel
+        discord_listener.get_historical_messages(max_num=constants.HISTORICAL_DEPTH)
 
 
     discord_col, analyse_col = st.columns(2, gap='medium')
@@ -269,11 +291,15 @@ if authentication_status:
                                    allow_unsafe_jscode=True,
                                    key='discord_table_key')
 
-            col_add_new_mes_button, col_submit_button = st.columns(2, gap='small')
+            col_add_new_mes_button, col_add_hist_mes_from_discord, col_submit_button = st.columns(3, gap='small')
 
             with col_add_new_mes_button:
                 add_new_message_button = st.form_submit_button(label='Add new messages',
                                                                on_click=add_new_messages_from_discord)
+
+            with col_add_hist_mes_from_discord:
+                add_hist_mes_from_discord_button = st.form_submit_button(label='Read historical messages',
+                                                                         on_click=add_historical_messages_from_discord)
 
             with col_submit_button:
                 submit_button_discord = st.form_submit_button(label='Submit selected',
@@ -305,7 +331,6 @@ if authentication_status:
                                                               on_click=submit_analyse_messages_to_discord)
             with col_check_box:
                 st.checkbox(label='Delete selected after submit', key='delete_selected_after_submit')
-
 
 # if st.button('Copy Selected Rows'):
 #     clear_logger = message_proc.MessageLogger()

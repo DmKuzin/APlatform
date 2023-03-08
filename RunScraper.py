@@ -7,7 +7,7 @@ discord_listener = RequestScraper.DiscordBot(constants.AUTHORIZATION_TOKEN,
                                              constants.DISCORD_FILE_PATH)
 
 # Get VIEW_SIZE latest messages from discord channel
-discord_listener.get_historical_messages(max_num=constants.VIEW_SIZE)
+discord_listener.get_historical_messages(max_num=constants.DATA_TABLE_SIZE)
 # Continuously read the latest message
 discord_listener.read_latest_messages()
 

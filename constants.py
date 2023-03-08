@@ -21,4 +21,5 @@ HASHED_FILE_PATH = 'Authentication/hashed_pw.pkl'
 
 AUTHENTICATION_CONFIG_FILE_PATH: str = 'Authentication/authentication_config.yaml'
 
-VIEW_SIZE: int = 20
+DATA_TABLE_SIZE: int = 1000
+HISTORICAL_DEPTH: int = 5

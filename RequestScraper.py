@@ -16,14 +16,14 @@ class DiscordBot:
         }
         self.api_url = 'https://discord.com/api/v9'
 
-        self.msg_loger = MessageProc.MessageLogger(max_rows=constants.VIEW_SIZE)
+        self.msg_loger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
         self.msg_loger.load_data_from_file(filename=save_message_path)
         self.save_message_path = save_message_path
 
-        # if len(self.msg_loger.data) > 0:
-        #     self.last_message_id = self.msg_loger.data[-1:]['id'].tolist()[0]
-        # else:
-        self.last_message_id = None
+        if len(self.msg_loger.data) > 0:
+            self.last_message_id = self.msg_loger.data[-1:]['id'].tolist()[0]
+        else:
+            self.last_message_id = None
 
         self.server_name = self.get_server_name()
         self.channel_name = self.get_channel_name()
@@ -74,7 +74,7 @@ class DiscordBot:
             if num >= max_num:
                 break
 
-        #return scraped_msg
+        # return scraped_msg
         for messages in reversed(scraped_msg):
             self.last_message_id = messages['id']
             status = MessageProc.MessageStatus.FROM_DISCORD.name
@@ -110,9 +110,9 @@ class DiscordBot:
             messages = json.loads(response.text)
 
             if len(messages) > 0:
+                # current_ids = self.msg_loger.data['id'].to_list()
+                # if not (messages[0]['id'] in current_ids):
                 self.last_message_id = messages[0]['id']
-                # current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                # status = 'from_discord'
                 status = MessageProc.MessageStatus.FROM_DISCORD.name
                 self.msg_loger.log_message(messages[0]['content'],
                                            messages[0]['id'],
@@ -123,27 +123,6 @@ class DiscordBot:
                                            self.channel_name)
                 self.msg_loger.save_data_to_file(filename=self.save_message_path)
 
-            #time.sleep(1)
+            # time.sleep(1)
             else:
                 break
-
-# authorization_token = 'OTE1OTUxMTAwNzUyOTUzMzQ0.GH3xHy.Ky3XIeQtu_7cePNRlbKICzrR7Cfn-SzEIbGLws'
-# server_id = 1073733605995589702
-# channel_id = 1073733606679248908
-
-# Geecko move
-# authorization_token = "OTE1OTUxMTAwNzUyOTUzMzQ0.GkPguW.I-xQx8znhvPkoY2lfGx7KvIGErW3mKlqDE4Dg8"
-# #server_id = 957931733351817226
-# channel_id = 957931734333272067
-
-# authorization_token = 'OTE1OTUxMTAwNzUyOTUzMzQ0.GkPguW.I-xQx8znhvPkoY2lfGx7KvIGErW3mKlqDE4Dg8'
-# channel_id = 1073733606679248908
-# save_message_path = 'MessageLog/msg_table.pkl'
-
-# discord_listener = DiscordBot(constants.AUTHORIZATION_TOKEN,
-#                               constants.CHANNEL_ID,
-#                               constants.DISCORD_FILE_PATH)
-# discord_listener.read_latest_messages()
-# client.get_messages(max_num=5)
-
-# %%
