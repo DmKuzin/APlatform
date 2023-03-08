@@ -17,13 +17,13 @@ class DiscordBot:
         self.api_url = 'https://discord.com/api/v9'
 
         self.msg_loger = MessageProc.MessageLogger(max_rows=constants.VIEW_SIZE)
-        self.msg_loger.load_data(filename=save_message_path)
+        self.msg_loger.load_data_from_file(filename=save_message_path)
         self.save_message_path = save_message_path
 
-        if len(self.msg_loger.data) > 0:
-            self.last_message_id = self.msg_loger.data[-1:]['id'].tolist()[0]
-        else:
-            self.last_message_id = None
+        # if len(self.msg_loger.data) > 0:
+        #     self.last_message_id = self.msg_loger.data[-1:]['id'].tolist()[0]
+        # else:
+        self.last_message_id = None
 
         self.server_name = self.get_server_name()
         self.channel_name = self.get_channel_name()
@@ -44,7 +44,7 @@ class DiscordBot:
         else:
             return print(f"Error getting server information: {server_response.text}")
 
-    def get_messages(self, max_num=10):
+    def get_historical_messages(self, max_num=10):
         """
         Get N historical messages from the Discord channel.
         """
@@ -56,6 +56,8 @@ class DiscordBot:
             query_parameters = f'limit={limit}'
             if last_historical_message_id is not None:
                 query_parameters += f'&before={last_historical_message_id}'
+            # else:
+            #     self.last_message_id = last_historical_message_id
 
             r = requests.get(
                 f'{self.api_url}/channels/{self.channel_id}/messages?{query_parameters}', headers=self.headers
@@ -72,7 +74,18 @@ class DiscordBot:
             if num >= max_num:
                 break
 
-        return scraped_msg
+        #return scraped_msg
+        for messages in reversed(scraped_msg):
+            self.last_message_id = messages['id']
+            status = MessageProc.MessageStatus.FROM_DISCORD.name
+            self.msg_loger.log_message(messages['content'],
+                                       messages['id'],
+                                       messages['timestamp'],
+                                       messages['author']['username'],
+                                       status,
+                                       self.server_name,
+                                       self.channel_name)
+            self.msg_loger.save_data_to_file(filename=self.save_message_path)
 
     def send_message(self, message):
         """
@@ -108,9 +121,11 @@ class DiscordBot:
                                            status,
                                            self.server_name,
                                            self.channel_name)
-                self.msg_loger.save_data(filename=self.save_message_path)
+                self.msg_loger.save_data_to_file(filename=self.save_message_path)
 
-            time.sleep(1)
+            #time.sleep(1)
+            else:
+                break
 
 # authorization_token = 'OTE1OTUxMTAwNzUyOTUzMzQ0.GH3xHy.Ky3XIeQtu_7cePNRlbKICzrR7Cfn-SzEIbGLws'
 # server_id = 1073733605995589702

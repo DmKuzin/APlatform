@@ -37,9 +37,13 @@ class MessageLogger:
 
         self.data = pd.concat([self.data, new_df], axis=0, ignore_index=True)
 
-    def save_data(self, filename):
+    def save_data_to_file(self, filename):
         self.data.to_pickle(filename)
 
-    def load_data(self, filename):
+    def load_data_from_file(self, filename):
         self.data = pd.read_pickle(filename)
+        if len(self.data) > self.max_rows:
+            pos = len(self.data) - self.max_rows
+            self.data = self.data[pos:]
+
         return self.data[self.columns]
