@@ -16,7 +16,6 @@ import yaml
 #     #st.write(v)
 #     #st.session_state[k] = v
 
-# --- USER AUTHENTICATION ---
 logo = constants.APP_LOGO_PATH
 
 st.set_page_config(page_title="Argonauts",
@@ -35,7 +34,6 @@ authenticator = stauth.Authenticate(
     config['cookie']['expiry_days'],
     config['preauthorized']
 )
-# st.markdown('<h1 style="text-align: center;">-- ARGONAUTS --</h1>', unsafe_allow_html=True)
 # --- USER AUTHENTICATION ---
 name, authentication_status, username = authenticator.login("Login", "main")
 
@@ -49,21 +47,26 @@ if authentication_status:
     st.sidebar.markdown('<h1 style="text-align: center;">-- ARGONAUTS --</h1>', unsafe_allow_html=True)
     st.sidebar.image(logo, width=300)
 
-    # Read servers table
-    servers_table = pd.read_csv(constants.SERVERS_TABLE_PATH)
-    server_names = servers_table['server_name'].to_list()
+    # --- LOAD SERVERS FROM FILE ---
 
+    # Read servers table from file
+    servers_table = pd.read_csv(constants.SERVERS_TABLE_PATH)
+    # Get server names
+    server_names = servers_table['server_name'].to_list()
+    # Get channels from selected server
     server_selected = st.sidebar.selectbox("Servers", server_names, key='server_select')
     channels_available = servers_table[servers_table['server_name'] == server_selected]['channel_name'].to_list()
-
+    # Get server id
     server_id = servers_table[servers_table['server_name'] == server_selected]['server_id'].to_list()[0]
-
+    # Set channels from selected server
     channel_selected = st.sidebar.selectbox("Channels", channels_available, key='channel_select')
-
+    # Get channel id
     channel_id = servers_table[servers_table['channel_name'] == channel_selected]['channel_id'].to_list()[0]
 
     st.sidebar.write(f'User: {name}')
     authenticator.logout('Logout', "sidebar")
+
+    # --- CREATE DISCORD LISTENER ---
 
     # Create Discord channel listener
     discord_listener = RequestScraper.DiscordBot(constants.AUTHORIZATION_TOKEN,
@@ -71,9 +74,12 @@ if authentication_status:
                                                  channel_id,
                                                  constants.DISCORD_FILE_PATH)
 
+    # --- LOAD DATA FROM FILE ---
+
+    # Create message loggers
     discord_logger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
     analyse_logger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
-
+    # Load data from files
     discord_data = discord_logger.load_data_from_file(filename=constants.DISCORD_FILE_PATH)
     analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
 
@@ -141,6 +147,8 @@ if authentication_status:
     #     selected_row = st.session_state["discord_table_key"]["selectedItems"][0]["rowIndex"]
     # except (KeyError, IndexError):
     #     selected_row = 0
+
+    # --- CONFIGURATE TABLES ---
     selected_row = 0
 
     columns = ['message', 'id', 'datetime', 'author', 'status', 'server_name', 'channel_name']
@@ -202,6 +210,9 @@ if authentication_status:
     # analyse_builder.configure_pagination()
     go_analyse = analyse_builder.build()
 
+    scroll = {'suppressScrollOnNewData': True}
+    go_analyse.update(scroll)
+
 
     # go_analyse['getRowStyle'] = jscode
 
@@ -225,6 +236,7 @@ if authentication_status:
                                        axis=0, ignore_index=True)
         added_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
 
+    # --- CALLBACK FUNCTIONS ---
 
     # @st.cache_data
     def delete_analyse():
@@ -266,15 +278,19 @@ if authentication_status:
 
 
     def add_new_messages_from_discord():
+        #with st.spinner('Reading messages...'):
         state_discord_table = st.session_state.discord_table_key
         # Read the latest message
         discord_listener.read_latest_messages()
 
 
     def add_historical_messages_from_discord():
+        #with st.spinner('Reading messages...'):
         # Get VIEW_SIZE latest messages from discord channel
         discord_listener.get_historical_messages(max_num=constants.HISTORICAL_DEPTH)
 
+
+    # --- BUILD UI ---
 
     discord_col, analyse_col = st.columns(2, gap='medium')
 
@@ -291,7 +307,8 @@ if authentication_status:
                                    allow_unsafe_jscode=True,
                                    key='discord_table_key')
 
-            col_add_new_mes_button, col_add_hist_mes_from_discord, col_submit_button = st.columns(3, gap='small')
+            #col_add_new_mes_button, col_add_hist_mes_from_discord, col_submit_button = st.columns(3, gap='small')
+            col_add_new_mes_button, col_add_hist_mes_from_discord = st.columns(2, gap='small')
 
             with col_add_new_mes_button:
                 add_new_message_button = st.form_submit_button(label='Add new messages',
@@ -301,9 +318,10 @@ if authentication_status:
                 add_hist_mes_from_discord_button = st.form_submit_button(label='Read historical messages',
                                                                          on_click=add_historical_messages_from_discord)
 
-            with col_submit_button:
-                submit_button_discord = st.form_submit_button(label='Submit selected',
-                                                              on_click=submit_discord_messages_to_analyse)
+            st.write('')
+            #with col_submit_button:
+            submit_button_discord = st.form_submit_button(label='Submit selected',
+                                                          on_click=submit_discord_messages_to_analyse)
 
     with analyse_col:
         st.header("Analyse")
@@ -332,28 +350,3 @@ if authentication_status:
             with col_check_box:
                 st.checkbox(label='Delete selected after submit', key='delete_selected_after_submit')
 
-# if st.button('Copy Selected Rows'):
-#     clear_logger = message_proc.MessageLogger()
-#     clear_logger.save_data(filename=ANALYSE_FILE_PATH)
-#     st.experimental_rerun()
-#     # selected_rows = discord_table.selected_rows
-#     # selected_rows_df = pd.DataFrame(selected_rows)
-#     # st.write(selected_rows_df)
-#     #analyse_data = pd.concat([selected_rows_df,  analyse_data], axis=0, ignore_index=True)
-
-# data2 = data2.append(selected_rows, ignore_index=True)
-# table2.update_grid(data2, GridUpdateMode.REPLACE)
-
-
-# discord_table
-
-# st.write(df.selected_rows[0].values('Message'))
-
-# create a Python class that has the following functions:
-#     1. Periodically download updates from excel file to pandas dataframe and write them to .streamlit AgGrid table
-# 2. in the constructor, the pandas dataframe update period from the excel file should be set
-# 3. in the class constructor, the number of rows for the AgGrid table should be set
-# 4. in the class constructor, the path to the excel file from which pandas dataframe updates are made should be set
-# 5. AgGrid settings in the form of GridOptionsBuilder should be passed to the class constructor
-
-# %%
