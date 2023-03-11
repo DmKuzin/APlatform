@@ -50,18 +50,22 @@ if authentication_status:
     # --- LOAD SERVERS FROM FILE ---
 
     # Read servers table from file
-    servers_table = pd.read_csv(constants.SERVERS_TABLE_PATH)
+    from_discord_servers_table = pd.read_csv(constants.FROM_DISCORD_SERVERS_TABLE_PATH)
     # Get server names
-    server_names = servers_table['server_name'].to_list()
+    server_names = from_discord_servers_table['server_name'].to_list()
     # Get channels from selected server
     server_selected = st.sidebar.selectbox("Servers", server_names, key='server_select')
-    channels_available = servers_table[servers_table['server_name'] == server_selected]['channel_name'].to_list()
+    channels_available = from_discord_servers_table[from_discord_servers_table['server_name'] == server_selected][
+        'channel_name'].to_list()
     # Get server id
-    server_id = servers_table[servers_table['server_name'] == server_selected]['server_id'].to_list()[0]
+    server_id = \
+    from_discord_servers_table[from_discord_servers_table['server_name'] == server_selected]['server_id'].to_list()[0]
     # Set channels from selected server
     channel_selected = st.sidebar.selectbox("Channels", channels_available, key='channel_select')
     # Get channel id
-    channel_id = servers_table[servers_table['channel_name'] == channel_selected]['channel_id'].to_list()[0]
+    channel_id = \
+    from_discord_servers_table[from_discord_servers_table['channel_name'] == channel_selected]['channel_id'].to_list()[
+        0]
 
     st.sidebar.write(f'User: {name}')
     authenticator.logout('Logout', "sidebar")
@@ -83,7 +87,6 @@ if authentication_status:
     discord_data = discord_logger.load_data_from_file(filename=constants.DISCORD_FILE_PATH)
     analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
 
-
     # @st.cache_data
     # def load_data(logger, filename):
     #     logger.load_data(filename=filename)
@@ -91,12 +94,18 @@ if authentication_status:
     # discord_data = load_data(discord_logger, constants.DISCORD_FILE_PATH)
     # analyse_data = load_data(analyse_logger, constants.ANALYSE_FILE_PATH)
 
+    # Read servers table from file
+    to_group_servers_table = pd.read_csv(constants.TO_GROUP_SERVERS_TABLE_PATH)
+    to_group_server_id = to_group_servers_table['server_id'].to_list()[0]
+    to_group_channel_id = to_group_servers_table['channel_id'].to_list()[0]
+
+
     # Bot for send message to group
     @st.cache_resource
     def discord_bot():
-        return RequestScraper.DiscordBot(constants.AUTHORIZATION_TOKEN,
-                                         constants.SERVER_ID,
-                                         constants.CHANNEL_ID,
+        return RequestScraper.DiscordBot(constants.TO_GROUP_AUTHORIZATION_TOKEN,
+                                         to_group_server_id,
+                                         to_group_channel_id,
                                          constants.DISCORD_FILE_PATH)
 
 
@@ -236,6 +245,7 @@ if authentication_status:
                                        axis=0, ignore_index=True)
         added_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
 
+
     # --- CALLBACK FUNCTIONS ---
 
     # @st.cache_data
@@ -277,17 +287,20 @@ if authentication_status:
         # discord_bot.send_message(summary)
 
 
+    # @st.cache_data(show_spinner='Reading messages...')
     def add_new_messages_from_discord():
-        #with st.spinner('Reading messages...'):
+        # with st.spinner('Reading messages...'):
         state_discord_table = st.session_state.discord_table_key
         # Read the latest message
         discord_listener.read_latest_messages()
 
 
     def add_historical_messages_from_discord():
-        #with st.spinner('Reading messages...'):
+        # with st.spinner('Reading messages...'):
+        num_msg = st.session_state.slider_number_of_messages_read
+        #st.write(num_msg)
         # Get VIEW_SIZE latest messages from discord channel
-        discord_listener.get_historical_messages(max_num=constants.HISTORICAL_DEPTH)
+        discord_listener.get_historical_messages(max_num=num_msg)
 
 
     # --- BUILD UI ---
@@ -299,37 +312,48 @@ if authentication_status:
         with st.form(key='Discord_channel_form'):
             discord_table = AgGrid(discord_data,
                                    gridOptions=go_discord,
-                                   height=600,
-                                   width=150,
+                                   height=constants.MESSAGE_TABLE_HEIGHT,
+                                   width=constants.MESSAGE_TABLE_WIDTH,
                                    fit_columns_on_grid_load=True,
                                    columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
                                    reload_data=True,
                                    allow_unsafe_jscode=True,
                                    key='discord_table_key')
 
-            #col_add_new_mes_button, col_add_hist_mes_from_discord, col_submit_button = st.columns(3, gap='small')
-            col_add_new_mes_button, col_add_hist_mes_from_discord = st.columns(2, gap='small')
+            # col_add_new_mes_button, col_add_hist_mes_from_discord, col_submit_button = st.columns(3, gap='small')
+            # col_add_new_mes_button, col_add_hist_mes_from_discord = st.columns(2, gap='small')
+            col_add_new_mes_button, empty_column, col_submit_button = st.columns([2, 5, 2], gap='small')
 
             with col_add_new_mes_button:
-                add_new_message_button = st.form_submit_button(label='Add new messages',
+                add_new_message_button = st.form_submit_button(label='Read new messages',
                                                                on_click=add_new_messages_from_discord)
 
-            with col_add_hist_mes_from_discord:
+                #left_col, right_col = st.columns(2, gap='small')
+
+                #with left_col:
                 add_hist_mes_from_discord_button = st.form_submit_button(label='Read historical messages',
                                                                          on_click=add_historical_messages_from_discord)
+                #with right_col:
+                st.slider(label=':envelope_with_arrow: Number of read',
+                          min_value=constants.NUM_HISTORICAL_MESSAGE_MIN,
+                          max_value=constants.NUM_HISTORICAL_MESSAGE_MAX,
+                          value=constants.NUM_DEFAULT_HISTORICAL_MESSAGE,
+                          key='slider_number_of_messages_read'
+                          #label_visibility='hidden'
+                )
 
-            st.write('')
-            #with col_submit_button:
-            submit_button_discord = st.form_submit_button(label='Submit selected',
-                                                          on_click=submit_discord_messages_to_analyse)
+            with col_submit_button:
+                submit_button_discord = st.form_submit_button(label='Submit selected',
+                                                              on_click=submit_discord_messages_to_analyse)
+
 
     with analyse_col:
         st.header("Analyse")
         with st.form(key='Analyse_channel_form'):
             analyse_table = AgGrid(analyse_data,
                                    gridOptions=go_analyse,
-                                   height=600,
-                                   width=150,
+                                   height=constants.MESSAGE_TABLE_HEIGHT,
+                                   width=constants.MESSAGE_TABLE_WIDTH,
                                    fit_columns_on_grid_load=True,
                                    columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
                                    reload_data=True,
@@ -349,4 +373,3 @@ if authentication_status:
                                                               on_click=submit_analyse_messages_to_discord)
             with col_check_box:
                 st.checkbox(label='Delete selected after submit', key='delete_selected_after_submit')
-
