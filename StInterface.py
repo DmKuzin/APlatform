@@ -315,7 +315,7 @@ if authentication_status:
                                    height=constants.MESSAGE_TABLE_HEIGHT,
                                    width=constants.MESSAGE_TABLE_WIDTH,
                                    fit_columns_on_grid_load=True,
-                                   columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
+                                   #columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
                                    reload_data=True,
                                    allow_unsafe_jscode=True,
                                    key='discord_table_key')
@@ -355,7 +355,7 @@ if authentication_status:
                                    height=constants.MESSAGE_TABLE_HEIGHT,
                                    width=constants.MESSAGE_TABLE_WIDTH,
                                    fit_columns_on_grid_load=True,
-                                   columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
+                                   #columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
                                    reload_data=True,
                                    allow_unsafe_jscode=True,
                                    key='analyse_table_key')
