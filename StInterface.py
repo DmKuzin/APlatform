@@ -1,7 +1,8 @@
 from typing import Dict
 
 from st_aggrid import AgGrid
-from st_aggrid import GridOptionsBuilder, ColumnsAutoSizeMode, JsCode
+#from st_aggrid import GridOptionsBuilder, ColumnsAutoSizeMode, JsCode
+from st_aggrid import GridOptionsBuilder, JsCode
 import streamlit_authenticator as stauth
 import pickle
 import pandas as pd
