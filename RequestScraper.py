@@ -20,13 +20,19 @@ class DiscordBot:
         self.msg_loger.load_data_from_file(filename=save_message_path)
         self.save_message_path = save_message_path
 
-        if len(self.msg_loger.data) > 0:
-            self.last_message_id = self.msg_loger.data[-1:]['id'].tolist()[0]
-        else:
-            self.last_message_id = None
+        # if len(self.msg_loger.data) > 0:
+        #     self.last_message_id = self.msg_loger.data[-1:]['id'].tolist()[0]
+        # else:
+        #     self.last_message_id = None
 
         self.server_name = self.get_server_name()
         self.channel_name = self.get_channel_name()
+
+        self.last_message_id = None
+        if len(self.msg_loger.data) > 0:
+            channel_data = self.msg_loger.data[self.msg_loger.data['channel_name'] == self.channel_name]
+            if len(channel_data) > 0:
+                self.last_message_id = channel_data[-1:]['id'].tolist()[0]
 
     def get_channel_name(self):
         channel_response = requests.get(f"https://discord.com/api/channels/{self.channel_id}", headers=self.headers)

@@ -1,10 +1,10 @@
-from typing import Dict
-
+#from typing import Dict
+#import time
 from st_aggrid import AgGrid
 #from st_aggrid import GridOptionsBuilder, ColumnsAutoSizeMode, JsCode
 from st_aggrid import GridOptionsBuilder, JsCode
 import streamlit_authenticator as stauth
-import pickle
+#import pickle
 import pandas as pd
 import streamlit as st
 import constants
@@ -24,7 +24,7 @@ st.set_page_config(page_title="Argonauts",
                    layout="wide"
                    )
 
-# load hashed passwords
+## load hashed passwords
 with open(constants.AUTHENTICATION_CONFIG_FILE_PATH) as file:
     config = yaml.load(file, Loader=yaml.SafeLoader)
 
@@ -46,7 +46,7 @@ if authentication_status == None:
 if authentication_status:
 
     st.sidebar.markdown('<h1 style="text-align: center;">-- ARGONAUTS --</h1>', unsafe_allow_html=True)
-    st.sidebar.image(logo, width=300)
+    st.sidebar.image(logo, width=constants.IMAGE_LOGO_SIZE)
 
     # --- LOAD SERVERS FROM FILE ---
 
@@ -269,6 +269,8 @@ if authentication_status:
     def submit_analyse_messages_to_discord():
         state_analyse_table = st.session_state.analyse_table_key
         selected_rows = state_analyse_table['selectedItems']
+        #st.write(selected_rows)
+
         selected_rows_df = pd.DataFrame(selected_rows)
         selected_message_ids = selected_rows_df['id'].tolist()
 
@@ -284,7 +286,27 @@ if authentication_status:
         current_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
 
         summary = st.session_state.text_area_summary
-        discord_bot().send_message(summary)
+
+        # Parse the table
+        out_text_body = ''
+        count = 1
+        for item in selected_rows:
+            msg = item['message']
+            author = item['author']
+            msg_datetime = item['datetime']
+
+            new_string = '_______________Message {}_______________\ndatetime: {}\nauthor: {}\nmessage: {' \
+                         '}\n______________________________________\n'.format(count, msg_datetime, author, msg)
+            out_text_body += new_string + '\n'
+            count += 1
+
+        out_text_body += '\n***************** Summary ******************\n' + summary
+
+        #st.text_area(label='test', placeholder=out_text_body)
+
+        #time.sleep(30)
+        # Send message to discord channel
+        discord_bot().send_message(out_text_body)
         # discord_bot.send_message(summary)
 
 
