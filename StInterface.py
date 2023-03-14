@@ -52,24 +52,33 @@ if authentication_status:
 
     # Read servers table from file
     from_discord_servers_table = pd.read_csv(constants.FROM_DISCORD_SERVERS_TABLE_PATH)
+    # user availability to servers
+    server_available_user = from_discord_servers_table['user_to_server_availability'] == username
     # Get server names
-    server_names = from_discord_servers_table['server_name'].to_list()
+    server_names = from_discord_servers_table[server_available_user]['server_name'].to_list()
     # Get channels from selected server
     server_selected = st.sidebar.selectbox("Servers", server_names, key='server_select')
-    channels_available = from_discord_servers_table[from_discord_servers_table['server_name'] == server_selected][
-        'channel_name'].to_list()
-    # Get server id
+    # Selected servers names
+    selected_server_names = from_discord_servers_table['server_name'] == server_selected
+    # user availability to servers
+    channel_available_user = from_discord_servers_table['user_to_channel_availability'] == username
+    #if sum(channel_available_user) > 0:
+    channels_available = from_discord_servers_table[selected_server_names & channel_available_user]['channel_name'].to_list()
+
     server_id = \
     from_discord_servers_table[from_discord_servers_table['server_name'] == server_selected]['server_id'].to_list()[0]
     # Set channels from selected server
     channel_selected = st.sidebar.selectbox("Channels", channels_available, key='channel_select')
-    # Get channel id
-    channel_id = \
-    from_discord_servers_table[from_discord_servers_table['channel_name'] == channel_selected]['channel_id'].to_list()[
-        0]
 
     st.sidebar.write(f'User: {name}')
     authenticator.logout('Logout', "sidebar")
+
+    # Get channel id
+    channel_id = None
+    if channel_selected is not None:
+        channel_id = from_discord_servers_table[from_discord_servers_table['channel_name'] == channel_selected]['channel_id'].to_list()[0]
+    else:
+        st.warning('No available channels')
 
     # --- CREATE DISCORD LISTENER ---
 
@@ -86,7 +95,10 @@ if authentication_status:
     analyse_logger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
     # Load data from files
     discord_data = discord_logger.load_data_from_file(filename=constants.DISCORD_FILE_PATH)
+    discord_data = discord_data[discord_data['channel_name'] == channel_selected]
+
     analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
+    analyse_data = analyse_data[analyse_data['channel_name'] == channel_selected]
 
     # @st.cache_data
     # def load_data(logger, filename):

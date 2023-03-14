@@ -6,7 +6,7 @@ FROM_DISCORD_SERVERS_TABLE_PATH = 'Servers/servers_from_discord.csv'
 
 TO_GROUP_SERVERS_TABLE_PATH = 'Servers/servers_to_group.csv'
 
-APP_LOGO_PATH = "logo/argonauts2.png"
+APP_LOGO_PATH = "logo/argonauts3.png"
 
 DISCORD_FILE_PATH = 'MessageLog/msg_table.pkl'
 ANALYSE_FILE_PATH = 'MessageLog/msg_analysis_table.pkl'

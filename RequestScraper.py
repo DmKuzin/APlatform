@@ -4,6 +4,7 @@ import time
 # from StreamlitWebPlatform.Run import message_proc
 import constants
 import MessageProc
+import pandas as pd
 
 
 class DiscordBot:
@@ -25,8 +26,11 @@ class DiscordBot:
         # else:
         #     self.last_message_id = None
 
-        self.server_name = self.get_server_name()
-        self.channel_name = self.get_channel_name()
+        # self.server_name = self.get_server_name_from_discord()
+        # self.channel_name = self.get_channel_name_from_discord()
+
+        self.server_name = self.get_server_name_from_table()
+        self.channel_name = self.get_channel_name_from_table()
 
         self.last_message_id = None
         if len(self.msg_loger.data) > 0:
@@ -34,7 +38,7 @@ class DiscordBot:
             if len(channel_data) > 0:
                 self.last_message_id = channel_data[-1:]['id'].tolist()[0]
 
-    def get_channel_name(self):
+    def get_channel_name_from_discord(self):
         channel_response = requests.get(f"https://discord.com/api/channels/{self.channel_id}", headers=self.headers)
         if channel_response.status_code == 200:
             channel_data = channel_response.json()
@@ -42,13 +46,32 @@ class DiscordBot:
         else:
             return print(f"Error getting channel information: {channel_response.text}")
 
-    def get_server_name(self):
+    def get_server_name_from_discord(self):
         server_response = requests.get(f"https://discord.com/api/guilds/{self.server_id}", headers=self.headers)
         if server_response.status_code == 200:
             server_data = server_response.json()
             return server_data["name"]
         else:
             return print(f"Error getting server information: {server_response.text}")
+
+    def get_server_name_from_table(self):
+        # Read servers table from file
+        from_discord_servers_table = pd.read_csv(constants.FROM_DISCORD_SERVERS_TABLE_PATH)
+        if sum(from_discord_servers_table['server_id'] == self.server_id) > 0:
+            server_name = from_discord_servers_table[from_discord_servers_table['server_id'] == self.server_id]['server_name'].to_list()[0]
+            return server_name
+        else:
+            return print(f"Error getting server name")
+
+    def get_channel_name_from_table(self):
+        # Read servers table from file
+        from_discord_servers_table = pd.read_csv(constants.FROM_DISCORD_SERVERS_TABLE_PATH)
+        if sum(from_discord_servers_table['channel_id'] == self.channel_id) > 0:
+            channel_name = from_discord_servers_table[from_discord_servers_table['channel_id'] == self.channel_id]['channel_name'].to_list()[0]
+            return channel_name
+        else:
+            return print(f"Error getting channel name")
+
 
     def get_historical_messages(self, max_num=10):
         """
