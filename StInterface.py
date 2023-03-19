@@ -91,13 +91,23 @@ if authentication_status:
     # --- LOAD DATA FROM FILE ---
 
     # Create message loggers
-    discord_logger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
-    analyse_logger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
+    #discord_logger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
+    discord_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
+                                                  constants.POSTGRESQL_CONNECTION_DATABASE,
+                                                  constants.POSTGRESQL_CONNECTION_USER,
+                                                  constants.POSTGRESQL_CONNECTION_PASSWORD)
+    #analyse_logger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
+    analyse_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
+                                                  constants.POSTGRESQL_CONNECTION_DATABASE,
+                                                  constants.POSTGRESQL_CONNECTION_USER,
+                                                  constants.POSTGRESQL_CONNECTION_PASSWORD)
     # Load data from files
-    discord_data = discord_logger.load_data_from_file(filename=constants.DISCORD_FILE_PATH)
+    #discord_data = discord_logger.load_data_from_file(filename=constants.DISCORD_FILE_PATH)
+    discord_data = discord_logger.load_data_from_table(constants.DISCORD_SQL_VIEW)
     discord_data = discord_data[discord_data['channel_name'] == channel_selected]
 
-    analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
+    #analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
+    analyse_data = analyse_logger.load_data_from_table(constants.ANALYSE_SQL_VIEW)
     analyse_data = analyse_data[analyse_data['channel_name'] == channel_selected]
 
     # @st.cache_data
@@ -246,17 +256,34 @@ if authentication_status:
         selected_message_ids = selected_rows_df['id'].tolist()
 
         # Set selected messages "to_analyse" status
-        current_discord_data = discord_logger.load_data_from_file(filename=constants.DISCORD_FILE_PATH)
-        idx = current_discord_data[current_discord_data['id'].isin(selected_message_ids)].index
-        current_discord_data.loc[idx, 'status'] = MessageProc.MessageStatus.TO_ANALYSE.name
-        current_discord_data.to_pickle(path=constants.DISCORD_FILE_PATH)
+        update_status_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
+        discord_logger.update_status_rows_from_table(constants.DISCORD_SQL_TABLE, update_status_list, MessageProc.MessageStatus.TO_ANALYSE.name)
+        #current_discord_data = discord_logger.load_data_from_file(filename=constants.DISCORD_FILE_PATH)
+        # current_discord_data = discord_logger.load_data_from_table(constants.DISCORD_SQL_VIEW)
+        # idx = current_discord_data[current_discord_data['id'].isin(selected_message_ids)].index
+        # current_discord_data.loc[idx, 'status'] = MessageProc.MessageStatus.TO_ANALYSE.name
+        #current_discord_data.to_pickle(path=constants.DISCORD_FILE_PATH)
+        # for idx, row in current_discord_data.iterrows():
+        #     print(idx, row)
 
         # Add selected messages to analyse
-        current_analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
-        selected_rows_df['status'] = MessageProc.MessageStatus.ANALYSE.name
-        added_analyse_data = pd.concat([current_analyse_data, selected_rows_df],
-                                       axis=0, ignore_index=True)
-        added_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
+        #current_analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
+        #current_analyse_data = analyse_logger.load_data_from_table(constants.ANALYSE_SQL_VIEW)
+
+        status_analyses = MessageProc.MessageStatus.ANALYSE.name
+        for idx, row in selected_rows_df.iterrows():
+            analyse_logger.log_data_to_table(constants.ANALYSE_SQL_TABLE,
+                                             row['message'],
+                                             str(row['id']),
+                                             row['datetime'],
+                                             row['author'],
+                                             status_analyses,
+                                             row['server_name'],
+                                             row['channel_name'])
+        #selected_rows_df['status'] = MessageProc.MessageStatus.ANALYSE.name
+        # added_analyse_data = pd.concat([current_analyse_data, selected_rows_df],
+        #                                axis=0, ignore_index=True)
+        # added_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
 
 
     # --- CALLBACK FUNCTIONS ---
@@ -271,10 +298,12 @@ if authentication_status:
         selected_message_ids = selected_rows_df['id'].tolist()
 
         # Set selected messages "to_analyse" status
-        current_analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
-        idx = current_analyse_data[current_analyse_data['id'].isin(selected_message_ids)].index
-        current_analyse_data.drop(idx, inplace=True)
-        current_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
+        # current_analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
+        # idx = current_analyse_data[current_analyse_data['id'].isin(selected_message_ids)].index
+        # current_analyse_data.drop(idx, inplace=True)
+        # current_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
+        del_ids_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
+        analyse_logger.delete_rows_from_table(constants.ANALYSE_SQL_TABLE, del_ids_list)
 
 
     # @st.cache_data
@@ -287,15 +316,21 @@ if authentication_status:
         selected_message_ids = selected_rows_df['id'].tolist()
 
         # Set selected messages "to_analyse" status
-        current_analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
-        idx = current_analyse_data[current_analyse_data['id'].isin(selected_message_ids)].index
+        # current_analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
+        # idx = current_analyse_data[current_analyse_data['id'].isin(selected_message_ids)].index
 
         if st.session_state.delete_selected_after_submit:
-            current_analyse_data.drop(idx, inplace=True)
-        else:
-            current_analyse_data.loc[idx, 'status'] = MessageProc.MessageStatus.SUMMARIZED.name
+            #current_analyse_data.drop(idx, inplace=True)
+            del_ids_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
+            analyse_logger.delete_rows_from_table(constants.ANALYSE_SQL_TABLE, del_ids_list)
 
-        current_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
+        else:
+            #current_analyse_data.loc[idx, 'status'] = MessageProc.MessageStatus.SUMMARIZED.name
+            update_status_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
+            status_summ = MessageProc.MessageStatus.SUMMARIZED.name
+            analyse_logger.update_status_rows_from_table(constants.ANALYSE_SQL_TABLE, update_status_list, status_summ)
+
+        #current_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
 
         summary = st.session_state.text_area_summary
 

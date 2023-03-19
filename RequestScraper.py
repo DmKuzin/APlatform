@@ -16,10 +16,19 @@ class DiscordBot:
             'authorization': f'{self.token}'
         }
         self.api_url = 'https://discord.com/api/v9'
+        self.last_message_id = ''
 
-        self.msg_loger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
-        self.msg_loger.load_data_from_file(filename=save_message_path)
-        self.save_message_path = save_message_path
+        # Initialize logger
+        self.sql_msg_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
+                                                           constants.POSTGRESQL_CONNECTION_DATABASE,
+                                                           constants.POSTGRESQL_CONNECTION_USER,
+                                                           constants.POSTGRESQL_CONNECTION_PASSWORD)
+
+
+
+        # self.msg_loger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
+        # self.msg_loger.load_data_from_file(filename=save_message_path)
+        # self.save_message_path = save_message_path
 
         # if len(self.msg_loger.data) > 0:
         #     self.last_message_id = self.msg_loger.data[-1:]['id'].tolist()[0]
@@ -32,11 +41,14 @@ class DiscordBot:
         self.server_name = self.get_server_name_from_table()
         self.channel_name = self.get_channel_name_from_table()
 
-        self.last_message_id = None
-        if len(self.msg_loger.data) > 0:
-            channel_data = self.msg_loger.data[self.msg_loger.data['channel_name'] == self.channel_name]
-            if len(channel_data) > 0:
-                self.last_message_id = channel_data[-1:]['id'].tolist()[0]
+        # self.last_message_id = None
+        # if len(self.msg_loger.data) > 0:
+        #     channel_data = self.msg_loger.data[self.msg_loger.data['channel_name'] == self.channel_name]
+        #     if len(channel_data) > 0:
+        #         self.last_message_id = channel_data[-1:]['id'].tolist()[0]
+        last_row = self.sql_msg_logger.get_last_row_from_table(constants.DISCORD_SQL_VIEW)
+        if len(last_row) > 0:
+            self.last_message_id = str(last_row['id'].to_list()[0])
 
     def get_channel_name_from_discord(self):
         channel_response = requests.get(f"https://discord.com/api/channels/{self.channel_id}", headers=self.headers)
@@ -105,16 +117,24 @@ class DiscordBot:
 
         # return scraped_msg
         for messages in reversed(scraped_msg):
-            self.last_message_id = messages['id']
+            self.last_message_id = str(messages['id'])
             status = MessageProc.MessageStatus.FROM_DISCORD.name
-            self.msg_loger.log_message(messages['content'],
-                                       messages['id'],
-                                       messages['timestamp'],
-                                       messages['author']['username'],
-                                       status,
-                                       self.server_name,
-                                       self.channel_name)
-            self.msg_loger.save_data_to_file(filename=self.save_message_path)
+            # self.msg_loger.log_message(messages['content'],
+            #                            messages['id'],
+            #                            messages['timestamp'],
+            #                            messages['author']['username'],
+            #                            status,
+            #                            self.server_name,
+            #                            self.channel_name)
+            # self.msg_loger.save_data_to_file(filename=self.save_message_path)
+            self.sql_msg_logger.log_data_to_table(constants.DISCORD_SQL_TABLE,
+                                                  messages['content'],
+                                                  str(messages['id']),
+                                                  messages['timestamp'],
+                                                  messages['author']['username'],
+                                                  status,
+                                                  self.server_name,
+                                                  self.channel_name)
 
     def send_message(self, message):
         """
@@ -131,7 +151,8 @@ class DiscordBot:
         """
         while True:
             params = {'limit': 1}
-            if self.last_message_id is not None:
+            #if self.last_message_id is not None:
+            if self.last_message_id:
                 params['after'] = self.last_message_id
 
             url = f'{self.api_url}/channels/{self.channel_id}/messages'
@@ -141,16 +162,25 @@ class DiscordBot:
             if len(messages) > 0:
                 # current_ids = self.msg_loger.data['id'].to_list()
                 # if not (messages[0]['id'] in current_ids):
-                self.last_message_id = messages[0]['id']
+                # self.msg_loger.log_message(messages[0]['content'],
+                #                            messages[0]['id'],
+                #                            messages[0]['timestamp'],
+                #                            messages[0]['author']['username'],
+                #                            status,
+                #                            self.server_name,
+                #                            self.channel_name)
+                # self.msg_loger.save_data_to_file(filename=self.save_message_path)
+
+                self.last_message_id = str(messages[0]['id'])
                 status = MessageProc.MessageStatus.FROM_DISCORD.name
-                self.msg_loger.log_message(messages[0]['content'],
-                                           messages[0]['id'],
-                                           messages[0]['timestamp'],
-                                           messages[0]['author']['username'],
-                                           status,
-                                           self.server_name,
-                                           self.channel_name)
-                self.msg_loger.save_data_to_file(filename=self.save_message_path)
+                self.sql_msg_logger.log_data_to_table(constants.DISCORD_SQL_TABLE,
+                                                      messages[0]['content'],
+                                                      str(messages[0]['id']),
+                                                      messages[0]['timestamp'],
+                                                      messages[0]['author']['username'],
+                                                      status,
+                                                      self.server_name,
+                                                      self.channel_name)
 
             # time.sleep(1)
             else:
