@@ -24,8 +24,6 @@ class DiscordBot:
                                                            constants.POSTGRESQL_CONNECTION_USER,
                                                            constants.POSTGRESQL_CONNECTION_PASSWORD)
 
-
-
         # self.msg_loger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
         # self.msg_loger.load_data_from_file(filename=save_message_path)
         # self.save_message_path = save_message_path
@@ -70,7 +68,8 @@ class DiscordBot:
         # Read servers table from file
         from_discord_servers_table = pd.read_csv(constants.FROM_DISCORD_SERVERS_TABLE_PATH)
         if sum(from_discord_servers_table['server_id'] == self.server_id) > 0:
-            server_name = from_discord_servers_table[from_discord_servers_table['server_id'] == self.server_id]['server_name'].to_list()[0]
+            server_name = from_discord_servers_table[from_discord_servers_table['server_id'] == self.server_id][
+                'server_name'].to_list()[0]
             return server_name
         else:
             return print(f"Error getting server name")
@@ -79,11 +78,11 @@ class DiscordBot:
         # Read servers table from file
         from_discord_servers_table = pd.read_csv(constants.FROM_DISCORD_SERVERS_TABLE_PATH)
         if sum(from_discord_servers_table['channel_id'] == self.channel_id) > 0:
-            channel_name = from_discord_servers_table[from_discord_servers_table['channel_id'] == self.channel_id]['channel_name'].to_list()[0]
+            channel_name = from_discord_servers_table[from_discord_servers_table['channel_id'] == self.channel_id][
+                'channel_name'].to_list()[0]
             return channel_name
         else:
             return print(f"Error getting channel name")
-
 
     def get_historical_messages(self, max_num=10):
         """
@@ -115,26 +114,66 @@ class DiscordBot:
             if num >= max_num:
                 break
 
-        # return scraped_msg
+        # log scraped msg to sql table
         for messages in reversed(scraped_msg):
-            self.last_message_id = str(messages['id'])
+            message = messages['content']
+            id = str(messages['id'])
+            datetime = messages['timestamp']
+            author = messages['author']['username']
             status = MessageProc.MessageStatus.FROM_DISCORD.name
-            # self.msg_loger.log_message(messages['content'],
-            #                            messages['id'],
-            #                            messages['timestamp'],
-            #                            messages['author']['username'],
-            #                            status,
-            #                            self.server_name,
-            #                            self.channel_name)
-            # self.msg_loger.save_data_to_file(filename=self.save_message_path)
+            server_name = self.server_name
+            channel_name = self.channel_name
+            mentions_id = None
+            mentions_username = None
+            message_reference_channel_id = None
+            message_reference_guild_id = None
+            message_reference_message_id = None
+            referenced_message_id = None
+            referenced_message_content = None
+            referenced_message_channel_id = None
+            referenced_message_author_username = None
+
+            # Message parser by headers
+            for header in messages:
+                # print(header)
+                # print('^^^^^^^^^^^^^')
+                if 'mentions' in header:
+                    if len(messages['mentions']) > 0:
+                        mentions_id = str(messages['mentions'][0]['id'])
+                        mentions_username = messages['mentions'][0]['username']
+
+                if 'message_reference' in header:
+                    if len(messages['message_reference']) > 0:
+                        message_reference_channel_id = messages['message_reference']['channel_id']
+                        message_reference_guild_id = messages['message_reference']['guild_id']
+                        message_reference_message_id = messages['message_reference']['message_id']
+
+                if 'referenced_message' in header:
+                    if len(messages['referenced_message']) > 0:
+                        referenced_message_id = messages['referenced_message']['id']
+                        referenced_message_content = messages['referenced_message']['content']
+                        referenced_message_channel_id = messages['referenced_message']['channel_id']
+                        referenced_message_author_username = messages['referenced_message']['author']['username']
+
             self.sql_msg_logger.log_data_to_table(constants.DISCORD_SQL_TABLE,
-                                                  messages['content'],
-                                                  str(messages['id']),
-                                                  messages['timestamp'],
-                                                  messages['author']['username'],
+                                                  message,
+                                                  id,
+                                                  datetime,
+                                                  author,
                                                   status,
-                                                  self.server_name,
-                                                  self.channel_name)
+                                                  server_name,
+                                                  channel_name,
+                                                  mentions_id,
+                                                  mentions_username,
+                                                  message_reference_channel_id,
+                                                  message_reference_guild_id,
+                                                  message_reference_message_id,
+                                                  referenced_message_id,
+                                                  referenced_message_content,
+                                                  referenced_message_channel_id,
+                                                  referenced_message_author_username)
+            # Save last message id
+            self.last_message_id = str(messages['id'])
 
     def send_message(self, message):
         """
@@ -151,7 +190,7 @@ class DiscordBot:
         """
         while True:
             params = {'limit': 1}
-            #if self.last_message_id is not None:
+            # if self.last_message_id is not None:
             if self.last_message_id:
                 params['after'] = self.last_message_id
 
@@ -160,27 +199,63 @@ class DiscordBot:
             messages = json.loads(response.text)
 
             if len(messages) > 0:
-                # current_ids = self.msg_loger.data['id'].to_list()
-                # if not (messages[0]['id'] in current_ids):
-                # self.msg_loger.log_message(messages[0]['content'],
-                #                            messages[0]['id'],
-                #                            messages[0]['timestamp'],
-                #                            messages[0]['author']['username'],
-                #                            status,
-                #                            self.server_name,
-                #                            self.channel_name)
-                # self.msg_loger.save_data_to_file(filename=self.save_message_path)
-
-                self.last_message_id = str(messages[0]['id'])
+                message = messages[0]['content']
+                id = str(messages[0]['id'])
+                datetime = messages[0]['timestamp']
+                author = messages[0]['author']['username']
                 status = MessageProc.MessageStatus.FROM_DISCORD.name
+                server_name = self.server_name
+                channel_name = self.channel_name
+                mentions_id = None
+                mentions_username = None
+                message_reference_channel_id = None
+                message_reference_guild_id = None
+                message_reference_message_id = None
+                referenced_message_id = None
+                referenced_message_content = None
+                referenced_message_channel_id = None
+                referenced_message_author_username = None
+
+                # Message parser by headers
+                for header in messages[0]:
+                    if 'mentions' in header:
+                        if len(messages[0]['mentions']) > 0:
+                            #print(messages[0]['mentions'])
+                            mentions_id = str(messages[0]['mentions'][0]['id'])
+                            mentions_username = messages[0]['mentions'][0]['username']
+
+                    if 'message_reference' in header:
+                        if len(messages[0]['message_reference']) > 0:
+                            message_reference_channel_id = messages[0]['message_reference']['channel_id']
+                            message_reference_guild_id = messages[0]['message_reference']['guild_id']
+                            message_reference_message_id = messages[0]['message_reference']['message_id']
+
+                    if 'referenced_message' in header:
+                        if len(messages[0]['referenced_message']) > 0:
+                            referenced_message_id = messages[0]['referenced_message']['id']
+                            referenced_message_content = messages[0]['referenced_message']['content']
+                            referenced_message_channel_id = messages[0]['referenced_message']['channel_id']
+                            referenced_message_author_username = messages[0]['referenced_message']['author']['username']
+
                 self.sql_msg_logger.log_data_to_table(constants.DISCORD_SQL_TABLE,
-                                                      messages[0]['content'],
-                                                      str(messages[0]['id']),
-                                                      messages[0]['timestamp'],
-                                                      messages[0]['author']['username'],
+                                                      message,
+                                                      id,
+                                                      datetime,
+                                                      author,
                                                       status,
-                                                      self.server_name,
-                                                      self.channel_name)
+                                                      server_name,
+                                                      channel_name,
+                                                      mentions_id,
+                                                      mentions_username,
+                                                      message_reference_channel_id,
+                                                      message_reference_guild_id,
+                                                      message_reference_message_id,
+                                                      referenced_message_id,
+                                                      referenced_message_content,
+                                                      referenced_message_channel_id,
+                                                      referenced_message_author_username)
+                # Save last message id
+                self.last_message_id = str(messages[0]['id'])
 
             # time.sleep(1)
             else:

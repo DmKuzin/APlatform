@@ -1,3 +1,4 @@
+# My Token
 TO_GROUP_AUTHORIZATION_TOKEN: str = 'OTE1OTUxMTAwNzUyOTUzMzQ0.Gs18Go.1M-rqO_38uwkecEdAf-PGgrAPY9MMEd80zQzyU'
 
 # Platon token

@@ -1,12 +1,14 @@
 import pandas as pd
-#from datetime import datetime
-#import numpy as np
+# from datetime import datetime
+# import numpy as np
 from enum import Enum
 import psycopg2
-#import streamlit as st
 
 
-#message_status = ['from_discord', 'to_analyse', 'to_group']
+# import streamlit as st
+
+
+# message_status = ['from_discord', 'to_analyse', 'to_group']
 
 class MessageStatus(Enum):
     FROM_DISCORD = 1
@@ -56,9 +58,42 @@ class SQLMessageLogger:
         self.database = database
         self.user = user
         self.password = password
-        self.columns = ['message', 'id', 'datetime', 'author', 'status', 'server_name', 'channel_name']
+        self.columns = ['message',
+                        'id',
+                        'datetime',
+                        'author',
+                        'status',
+                        'server_name',
+                        'channel_name',
+                        'mentions_id',
+                        'mentions_username',
+                        'message_reference_channel_id',
+                        'message_reference_guild_id',
+                        'message_reference_message_id',
+                        'referenced_message_id',
+                        'referenced_message_content',
+                        'referenced_message_channel_id',
+                        'referenced_message_author_username']
 
-    def log_data_to_table(self, destination_table, message, id, datetime, author, status, server_name, channel_name):
+    def log_data_to_table(self,
+                          destination_table,
+                          message,
+                          id,
+                          datetime,
+                          author,
+                          status,
+                          server_name,
+                          channel_name,
+                          mentions_id,
+                          mentions_username,
+                          message_reference_channel_id,
+                          message_reference_guild_id,
+                          message_reference_message_id,
+                          referenced_message_id,
+                          referenced_message_content,
+                          referenced_message_channel_id,
+                          referenced_message_author_username):
+
         # Open connection
         conn = psycopg2.connect(host=self.host,
                                 database=self.database,
@@ -71,7 +106,32 @@ class SQLMessageLogger:
                                                    author,
                                                    status,
                                                    server_name,
-                                                   channel_name) VALUES (%s, %s, %s, %s, %s, %s, %s) ON CONFLICT (id) DO NOTHING;"""
+                                                   channel_name,
+                                                   mentions_id,
+                                                   mentions_username,
+                                                   message_reference_channel_id,
+                                                   message_reference_guild_id,
+                                                   message_reference_message_id,
+                                                   referenced_message_id,
+                                                   referenced_message_content,
+                                                   referenced_message_channel_id,
+                                                   referenced_message_author_username
+                                                   ) VALUES (%s,
+                                                             %s,
+                                                             %s,
+                                                             %s,
+                                                             %s,
+                                                             %s,
+                                                             %s,
+                                                             %s,
+                                                             %s,
+                                                             %s,
+                                                             %s,
+                                                             %s,
+                                                             %s,
+                                                             %s,
+                                                             %s,
+                                                             %s) ON CONFLICT (id) DO NOTHING;"""
         # Insert values
         values = (message,
                   id,
@@ -79,7 +139,16 @@ class SQLMessageLogger:
                   author,
                   status,
                   server_name,
-                  channel_name)
+                  channel_name,
+                  mentions_id,
+                  mentions_username,
+                  message_reference_channel_id,
+                  message_reference_guild_id,
+                  message_reference_message_id,
+                  referenced_message_id,
+                  referenced_message_content,
+                  referenced_message_channel_id,
+                  referenced_message_author_username)
 
         # Execute query
         cursor = conn.cursor()
@@ -98,7 +167,7 @@ class SQLMessageLogger:
                                 password=self.password)
 
         cursor = conn.cursor()
-        sql = f"SELECT message, id, datetime, author, status, server_name, channel_name FROM {source_table}"
+        sql = f"SELECT message, id, datetime, author, status, server_name, channel_name, mentions_id, mentions_username, message_reference_channel_id, message_reference_guild_id, message_reference_message_id, referenced_message_id, referenced_message_content, referenced_message_channel_id, referenced_message_author_username FROM {source_table}"
         cursor.execute(sql)
         rows = cursor.fetchall()
         df = pd.DataFrame(rows, columns=self.columns)
@@ -127,7 +196,7 @@ class SQLMessageLogger:
         return df
 
     def delete_rows_from_table(self, source_table, delete_id_list):
-        #sql = f"""DELETE FROM {source_table} WHERE id = CAST({delete_id} AS TEXT);"""
+        # sql = f"""DELETE FROM {source_table} WHERE id = CAST({delete_id} AS TEXT);"""
         sql = f"""DELETE FROM {source_table} WHERE id IN ({delete_id_list});"""
         # Open connection
         conn = psycopg2.connect(host=self.host,
@@ -155,8 +224,3 @@ class SQLMessageLogger:
         conn.commit()
         cursor.close()
         conn.close()
-
-
-
-
-

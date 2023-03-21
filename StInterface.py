@@ -183,7 +183,23 @@ if authentication_status:
     # --- CONFIGURATE TABLES ---
     selected_row = 0
 
-    columns = ['message', 'id', 'datetime', 'author', 'status', 'server_name', 'channel_name']
+    columns = ['message',
+               'id',
+               'datetime',
+               'author',
+               'status',
+               'server_name',
+               'channel_name',
+               'mentions_id',
+               'mentions_username',
+               'message_reference_channel_id',
+               'message_reference_guild_id',
+               'message_reference_message_id',
+               'referenced_message_id',
+               'referenced_message_content',
+               'referenced_message_channel_id',
+               'referenced_message_author_username']
+
     discord_builder = GridOptionsBuilder.from_dataframe(discord_data)
     discord_builder.configure_columns(column_names=columns,
                                       cellStyle=jscode_discord,
@@ -195,6 +211,7 @@ if authentication_status:
     discord_builder.configure_selection(selection_mode='multiple', pre_selected_rows=[selected_row],
                                         header_checkbox=True, use_checkbox=True)
     # discord_builder.configure_default_column(min_column_width=50)
+    # Hide support columns
     for col in columns:
         discord_builder.configure_column(col, hide=True)
 
@@ -279,7 +296,17 @@ if authentication_status:
                                              row['author'],
                                              status_analyses,
                                              row['server_name'],
-                                             row['channel_name'])
+                                             row['channel_name'],
+                                             row['mentions_id'],
+                                             row['mentions_username'],
+                                             row['message_reference_channel_id'],
+                                             row['message_reference_guild_id'],
+                                             row['message_reference_message_id'],
+                                             row['referenced_message_id'],
+                                             row['referenced_message_content'],
+                                             row['referenced_message_channel_id'],
+                                             row['referenced_message_author_username'])
+
         #selected_rows_df['status'] = MessageProc.MessageStatus.ANALYSE.name
         # added_analyse_data = pd.concat([current_analyse_data, selected_rows_df],
         #                                axis=0, ignore_index=True)
