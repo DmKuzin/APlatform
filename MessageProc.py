@@ -167,7 +167,22 @@ class SQLMessageLogger:
                                 password=self.password)
 
         cursor = conn.cursor()
-        sql = f"SELECT message, id, datetime, author, status, server_name, channel_name, mentions_id, mentions_username, message_reference_channel_id, message_reference_guild_id, message_reference_message_id, referenced_message_id, referenced_message_content, referenced_message_channel_id, referenced_message_author_username FROM {source_table}"
+        sql = f"""SELECT message,
+                         id,
+                         datetime,
+                         author,
+                         status,
+                         server_name,
+                         channel_name,
+                         mentions_id,
+                         mentions_username,
+                         message_reference_channel_id,
+                         message_reference_guild_id,
+                         message_reference_message_id,
+                         referenced_message_id,
+                         referenced_message_content,
+                         referenced_message_channel_id,
+                         referenced_message_author_username FROM {source_table}"""
         cursor.execute(sql)
         rows = cursor.fetchall()
         df = pd.DataFrame(rows, columns=self.columns)
