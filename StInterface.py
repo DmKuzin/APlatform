@@ -274,9 +274,7 @@ if authentication_status:
 
         if state_discord_table is not None:
             selected_rows = state_discord_table['selectedItems']
-            st.write(selected_rows)
             selected_rows_df = pd.DataFrame(selected_rows)
-            st.write(selected_rows_df)
             selected_message_ids = selected_rows_df['id'].tolist()
 
             # Set selected messages "to_analyse" status
