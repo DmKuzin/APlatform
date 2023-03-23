@@ -8,7 +8,7 @@ import pandas as pd
 
 
 class DiscordBot:
-    def __init__(self, token: str, server_id: int, channel_id: int, save_message_path: str):
+    def __init__(self, token: str, server_id: int, channel_id: int, psql_conn: dict):
         self.token = token
         self.server_id = server_id
         self.channel_id = channel_id
@@ -19,10 +19,14 @@ class DiscordBot:
         self.last_message_id = ''
 
         # Initialize logger
-        self.sql_msg_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
-                                                           constants.POSTGRESQL_CONNECTION_DATABASE,
-                                                           constants.POSTGRESQL_CONNECTION_USER,
-                                                           constants.POSTGRESQL_CONNECTION_PASSWORD)
+        # self.sql_msg_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
+        #                                                    constants.POSTGRESQL_CONNECTION_DATABASE,
+        #                                                    constants.POSTGRESQL_CONNECTION_USER,
+        #                                                    constants.POSTGRESQL_CONNECTION_PASSWORD)
+        self.sql_msg_logger = MessageProc.SQLMessageLogger(psql_conn['host'],
+                                                           psql_conn['database'],
+                                                           psql_conn['user'],
+                                                           psql_conn['password'])
 
         self.server_name = self.get_server_name_from_table()
         self.channel_name = self.get_channel_name_from_table()

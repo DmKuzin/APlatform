@@ -83,10 +83,15 @@ if authentication_status:
     # --- CREATE DISCORD LISTENER ---
 
     # Create Discord channel listener
+    psql_conn = {'host': constants.POSTGRESQL_CONNECTION_HOST,
+                 'database': constants.POSTGRESQL_CONNECTION_DATABASE,
+                 'user': constants.POSTGRESQL_CONNECTION_USER,
+                 'password': constants.POSTGRESQL_CONNECTION_PASSWORD}
+
     discord_listener = RequestScraper.DiscordBot(constants.AUTHORIZATION_TOKEN,
                                                  server_id,
                                                  channel_id,
-                                                 constants.DISCORD_FILE_PATH)
+                                                 psql_conn)
 
     # --- LOAD DATA FROM FILE ---
 
@@ -126,11 +131,15 @@ if authentication_status:
     # Bot for send message to group
     @st.cache_resource
     def discord_bot():
+        psql_conn = {'host': constants.POSTGRESQL_CONNECTION_HOST,
+                     'database': constants.POSTGRESQL_CONNECTION_DATABASE,
+                     'user': constants.POSTGRESQL_CONNECTION_USER,
+                     'password': constants.POSTGRESQL_CONNECTION_PASSWORD}
+
         return RequestScraper.DiscordBot(constants.TO_GROUP_AUTHORIZATION_TOKEN,
                                          to_group_server_id,
                                          to_group_channel_id,
-                                         constants.DISCORD_FILE_PATH)
-
+                                         psql_conn)
 
     # define the columns to be displayed
     # visible_columns = ['message', 'author']
