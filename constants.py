@@ -13,6 +13,7 @@ DISCORD_FILE_PATH: str = 'MessageLog/msg_table.pkl'
 ANALYSE_FILE_PATH: str = 'MessageLog/msg_analysis_table.pkl'
 
 POSTGRESQL_CONNECTION_HOST: str = 'localhost'
+#POSTGRESQL_CONNECTION_HOST: str = '16.170.250.163'
 POSTGRESQL_CONNECTION_DATABASE: str = 'postgres'
 POSTGRESQL_CONNECTION_USER: str = 'postgres'
 POSTGRESQL_CONNECTION_PASSWORD: str = 'qwerty'

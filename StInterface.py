@@ -208,8 +208,10 @@ if authentication_status:
                                       flex=1,
                                       autoHeight=True)
 
-    discord_builder.configure_selection(selection_mode='multiple', pre_selected_rows=[selected_row],
-                                        header_checkbox=True, use_checkbox=True)
+    # discord_builder.configure_selection(selection_mode='multiple', pre_selected_rows=[selected_row],
+    #                                     header_checkbox=True, use_checkbox=True)
+
+    discord_builder.configure_selection(selection_mode='multiple', header_checkbox=True, use_checkbox=True)
     # discord_builder.configure_default_column(min_column_width=50)
     # Hide support columns
     for col in columns:
@@ -268,121 +270,96 @@ if authentication_status:
     # @st.cache_data
     def submit_discord_messages_to_analyse():
         state_discord_table = st.session_state.discord_table_key
-        selected_rows = state_discord_table['selectedItems']
-        selected_rows_df = pd.DataFrame(selected_rows)
-        selected_message_ids = selected_rows_df['id'].tolist()
+        #st.write(state_discord_table)
 
-        # Set selected messages "to_analyse" status
-        update_status_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
-        discord_logger.update_status_rows_from_table(constants.DISCORD_SQL_TABLE, update_status_list, MessageProc.MessageStatus.TO_ANALYSE.name)
-        #current_discord_data = discord_logger.load_data_from_file(filename=constants.DISCORD_FILE_PATH)
-        # current_discord_data = discord_logger.load_data_from_table(constants.DISCORD_SQL_VIEW)
-        # idx = current_discord_data[current_discord_data['id'].isin(selected_message_ids)].index
-        # current_discord_data.loc[idx, 'status'] = MessageProc.MessageStatus.TO_ANALYSE.name
-        #current_discord_data.to_pickle(path=constants.DISCORD_FILE_PATH)
-        # for idx, row in current_discord_data.iterrows():
-        #     print(idx, row)
+        if state_discord_table is not None:
+            selected_rows = state_discord_table['selectedItems']
+            st.write(selected_rows)
+            selected_rows_df = pd.DataFrame(selected_rows)
+            st.write(selected_rows_df)
+            selected_message_ids = selected_rows_df['id'].tolist()
 
-        # Add selected messages to analyse
-        #current_analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
-        #current_analyse_data = analyse_logger.load_data_from_table(constants.ANALYSE_SQL_VIEW)
-
-        status_analyses = MessageProc.MessageStatus.ANALYSE.name
-        for idx, row in selected_rows_df.iterrows():
-            analyse_logger.log_data_to_table(constants.ANALYSE_SQL_TABLE,
-                                             row['message'],
-                                             str(row['id']),
-                                             row['datetime'],
-                                             row['author'],
-                                             status_analyses,
-                                             row['server_name'],
-                                             row['channel_name'],
-                                             row['mentions_id'],
-                                             row['mentions_username'],
-                                             row['message_reference_channel_id'],
-                                             row['message_reference_guild_id'],
-                                             row['message_reference_message_id'],
-                                             row['referenced_message_id'],
-                                             row['referenced_message_content'],
-                                             row['referenced_message_channel_id'],
-                                             row['referenced_message_author_username'])
-
-        #selected_rows_df['status'] = MessageProc.MessageStatus.ANALYSE.name
-        # added_analyse_data = pd.concat([current_analyse_data, selected_rows_df],
-        #                                axis=0, ignore_index=True)
-        # added_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
-
+            # Set selected messages "to_analyse" status
+            update_status_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
+            discord_logger.update_status_rows_from_table(constants.DISCORD_SQL_TABLE, update_status_list, MessageProc.MessageStatus.TO_ANALYSE.name)
+            status_analyses = MessageProc.MessageStatus.ANALYSE.name
+            # Log selected messages to_analyse table
+            for idx, row in selected_rows_df.iterrows():
+                analyse_logger.log_data_to_table(constants.ANALYSE_SQL_TABLE,
+                                                 row['message'],
+                                                 str(row['id']),
+                                                 row['datetime'],
+                                                 row['author'],
+                                                 status_analyses,
+                                                 row['server_name'],
+                                                 row['channel_name'],
+                                                 row['mentions_id'],
+                                                 row['mentions_username'],
+                                                 row['message_reference_channel_id'],
+                                                 row['message_reference_guild_id'],
+                                                 row['message_reference_message_id'],
+                                                 row['referenced_message_id'],
+                                                 row['referenced_message_content'],
+                                                 row['referenced_message_channel_id'],
+                                                 row['referenced_message_author_username'])
+        else:
+            st.warning('No selected messages for submit')
 
     # --- CALLBACK FUNCTIONS ---
 
     # @st.cache_data
     def delete_analyse():
-        # clear_logger = MessageProc.MessageLogger()
-        # clear_logger.save_data(filename=constants.ANALYSE_FILE_PATH)
         state_analyse_table = st.session_state.analyse_table_key
-        selected_rows = state_analyse_table['selectedItems']
-        selected_rows_df = pd.DataFrame(selected_rows)
-        selected_message_ids = selected_rows_df['id'].tolist()
 
-        # Set selected messages "to_analyse" status
-        # current_analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
-        # idx = current_analyse_data[current_analyse_data['id'].isin(selected_message_ids)].index
-        # current_analyse_data.drop(idx, inplace=True)
-        # current_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
-        del_ids_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
-        analyse_logger.delete_rows_from_table(constants.ANALYSE_SQL_TABLE, del_ids_list)
+        if state_analyse_table is not None:
+            selected_rows = state_analyse_table['selectedItems']
+            selected_rows_df = pd.DataFrame(selected_rows)
+            selected_message_ids = selected_rows_df['id'].tolist()
+
+            # Delete selected messages
+            del_ids_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
+            analyse_logger.delete_rows_from_table(constants.ANALYSE_SQL_TABLE, del_ids_list)
+        else:
+            st.warning('No selected messages for delete')
 
 
     # @st.cache_data
     def submit_analyse_messages_to_discord():
         state_analyse_table = st.session_state.analyse_table_key
-        selected_rows = state_analyse_table['selectedItems']
-        #st.write(selected_rows)
 
-        selected_rows_df = pd.DataFrame(selected_rows)
-        selected_message_ids = selected_rows_df['id'].tolist()
+        if state_analyse_table is not None:
+            selected_rows = state_analyse_table['selectedItems']
+            selected_rows_df = pd.DataFrame(selected_rows)
+            selected_message_ids = selected_rows_df['id'].tolist()
+            # Delete selected messages is set flag delete_selected_after_submit
+            if st.session_state.delete_selected_after_submit:
+                del_ids_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
+                analyse_logger.delete_rows_from_table(constants.ANALYSE_SQL_TABLE, del_ids_list)
+            else:
+                update_status_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
+                status_summ = MessageProc.MessageStatus.SUMMARIZED.name
+                analyse_logger.update_status_rows_from_table(constants.ANALYSE_SQL_TABLE, update_status_list, status_summ)
 
-        # Set selected messages "to_analyse" status
-        # current_analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
-        # idx = current_analyse_data[current_analyse_data['id'].isin(selected_message_ids)].index
+            summary = st.session_state.text_area_summary
 
-        if st.session_state.delete_selected_after_submit:
-            #current_analyse_data.drop(idx, inplace=True)
-            del_ids_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
-            analyse_logger.delete_rows_from_table(constants.ANALYSE_SQL_TABLE, del_ids_list)
+            # Parse the table
+            out_text_body = ''
+            count = 1
+            for item in selected_rows:
+                msg = item['message']
+                author = item['author']
+                msg_datetime = item['datetime']
 
+                new_string = '_______________Message {}_______________\ndatetime: {}\nauthor: {}\nmessage: {' \
+                             '}\n______________________________________\n'.format(count, msg_datetime, author, msg)
+                out_text_body += new_string + '\n'
+                count += 1
+
+            out_text_body += '\n***************** Summary ******************\n' + summary
+            # Send message to discord channel
+            discord_bot().send_message(out_text_body)
         else:
-            #current_analyse_data.loc[idx, 'status'] = MessageProc.MessageStatus.SUMMARIZED.name
-            update_status_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
-            status_summ = MessageProc.MessageStatus.SUMMARIZED.name
-            analyse_logger.update_status_rows_from_table(constants.ANALYSE_SQL_TABLE, update_status_list, status_summ)
-
-        #current_analyse_data.to_pickle(path=constants.ANALYSE_FILE_PATH)
-
-        summary = st.session_state.text_area_summary
-
-        # Parse the table
-        out_text_body = ''
-        count = 1
-        for item in selected_rows:
-            msg = item['message']
-            author = item['author']
-            msg_datetime = item['datetime']
-
-            new_string = '_______________Message {}_______________\ndatetime: {}\nauthor: {}\nmessage: {' \
-                         '}\n______________________________________\n'.format(count, msg_datetime, author, msg)
-            out_text_body += new_string + '\n'
-            count += 1
-
-        out_text_body += '\n***************** Summary ******************\n' + summary
-
-        #st.text_area(label='test', placeholder=out_text_body)
-
-        #time.sleep(30)
-        # Send message to discord channel
-        discord_bot().send_message(out_text_body)
-        # discord_bot.send_message(summary)
-
+            st.warning('No selected messages for submit')
 
     # @st.cache_data(show_spinner='Reading messages...')
     def add_new_messages_from_discord():
@@ -395,7 +372,6 @@ if authentication_status:
     def add_historical_messages_from_discord():
         # with st.spinner('Reading messages...'):
         num_msg = st.session_state.slider_number_of_messages_read
-        #st.write(num_msg)
         # Get VIEW_SIZE latest messages from discord channel
         discord_listener.get_historical_messages(max_num=num_msg)
 
@@ -424,8 +400,6 @@ if authentication_status:
             with col_add_new_mes_button:
                 add_new_message_button = st.form_submit_button(label='Read new messages',
                                                                on_click=add_new_messages_from_discord)
-
-                #left_col, right_col = st.columns(2, gap='small')
 
                 #with left_col:
                 add_hist_mes_from_discord_button = st.form_submit_button(label='Read historical messages',
