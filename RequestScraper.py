@@ -19,10 +19,6 @@ class DiscordBot:
         self.last_message_id = ''
 
         # Initialize logger
-        # self.sql_msg_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
-        #                                                    constants.POSTGRESQL_CONNECTION_DATABASE,
-        #                                                    constants.POSTGRESQL_CONNECTION_USER,
-        #                                                    constants.POSTGRESQL_CONNECTION_PASSWORD)
         self.sql_msg_logger = MessageProc.SQLMessageLogger(psql_conn['host'],
                                                            psql_conn['database'],
                                                            psql_conn['user'],

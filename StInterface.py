@@ -16,6 +16,8 @@ import yaml
 #     st.write(k)
 #     #st.write(v)
 #     #st.session_state[k] = v
+if 'discord_table_key' not in st.session_state:
+    st.session_state['discord_table_key'] = None
 
 logo = constants.APP_LOGO_PATH
 
@@ -95,32 +97,23 @@ if authentication_status:
 
     # --- LOAD DATA FROM FILE ---
 
-    # Create message loggers
-    #discord_logger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
+    # Create message logger for discord
     discord_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
                                                   constants.POSTGRESQL_CONNECTION_DATABASE,
                                                   constants.POSTGRESQL_CONNECTION_USER,
                                                   constants.POSTGRESQL_CONNECTION_PASSWORD)
-    #analyse_logger = MessageProc.MessageLogger(max_rows=constants.DATA_TABLE_SIZE)
+    # Create message logger for analyse
     analyse_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
                                                   constants.POSTGRESQL_CONNECTION_DATABASE,
                                                   constants.POSTGRESQL_CONNECTION_USER,
                                                   constants.POSTGRESQL_CONNECTION_PASSWORD)
-    # Load data from files
-    #discord_data = discord_logger.load_data_from_file(filename=constants.DISCORD_FILE_PATH)
+
+    # Load data from SQL tables
     discord_data = discord_logger.load_data_from_table(constants.DISCORD_SQL_VIEW)
     discord_data = discord_data[discord_data['channel_name'] == channel_selected]
 
-    #analyse_data = analyse_logger.load_data_from_file(filename=constants.ANALYSE_FILE_PATH)
     analyse_data = analyse_logger.load_data_from_table(constants.ANALYSE_SQL_VIEW)
     analyse_data = analyse_data[analyse_data['channel_name'] == channel_selected]
-
-    # @st.cache_data
-    # def load_data(logger, filename):
-    #     logger.load_data(filename=filename)
-
-    # discord_data = load_data(discord_logger, constants.DISCORD_FILE_PATH)
-    # analyse_data = load_data(analyse_logger, constants.ANALYSE_FILE_PATH)
 
     # Read servers table from file
     to_group_servers_table = pd.read_csv(constants.TO_GROUP_SERVERS_TABLE_PATH)
@@ -371,7 +364,7 @@ if authentication_status:
     # @st.cache_data(show_spinner='Reading messages...')
     def add_new_messages_from_discord():
         # with st.spinner('Reading messages...'):
-        state_discord_table = st.session_state.discord_table_key
+        # state_discord_table = st.session_state.discord_table_key
         # Read the latest message
         discord_listener.read_latest_messages()
 
