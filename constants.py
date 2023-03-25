@@ -22,6 +22,7 @@ DISCORD_SQL_TABLE: str = 'raw_discord_data.from_discord'
 DISCORD_SQL_VIEW: str = 'raw_discord_data.view_from_discord'
 ANALYSE_SQL_TABLE: str = 'raw_discord_data.to_analyse'
 ANALYSE_SQL_VIEW: str = 'raw_discord_data.view_to_analyse'
+SUMMARY_SQL_TABLE: str = 'raw_discord_data.to_discord_group'
 
 HASHED_FILE_PATH: str = 'Authentication/hashed_pw.pkl'
 

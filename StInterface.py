@@ -16,8 +16,12 @@ import yaml
 #     st.write(k)
 #     #st.write(v)
 #     #st.session_state[k] = v
+
 if 'discord_table_key' not in st.session_state:
     st.session_state['discord_table_key'] = None
+
+# if 'channel_select' not in st.session_state:
+#     st.session_state['channel_select'] = None
 
 logo = constants.APP_LOGO_PATH
 
@@ -347,17 +351,20 @@ if authentication_status:
             count = 1
             for item in selected_rows:
                 msg = item['message']
+                id = item['id']
                 author = item['author']
                 msg_datetime = item['datetime']
 
-                new_string = '_______________Message {}_______________\ndatetime: {}\nauthor: {}\nmessage: {' \
-                             '}\n______________________________________\n'.format(count, msg_datetime, author, msg)
+                new_string = 'count: {}\nid: {}\ndatetime: {}\nauthor: {}\nmessage: {' \
+                             '}\n'.format(count, id, msg_datetime, author, msg)
                 out_text_body += new_string + '\n'
                 count += 1
 
-            out_text_body += '\n***************** Summary ******************\n' + summary
+            full_summary = out_text_body + 'Summary: ' + summary
             # Send message to discord channel
-            discord_bot().send_message(out_text_body)
+            discord_bot().send_message(full_summary)
+            # Log summary to table
+            analyse_logger.log_summary(constants.SUMMARY_SQL_TABLE, out_text_body, summary)
         else:
             st.warning('No selected messages for submit')
 

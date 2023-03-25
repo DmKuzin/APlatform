@@ -158,6 +158,9 @@ class DiscordBot:
                                                       referenced_message_author_username)
                 # Save last message id
                 self.last_message_id = str(messages['id'])
+                #print(message)
+                # print(server_name)
+                # print(channel_name)
 
     def send_message(self, message):
         """
@@ -244,6 +247,7 @@ class DiscordBot:
                                                           referenced_message_author_username)
                     # Save last message id
                     self.last_message_id = str(messages[0]['id'])
+                    #print(message)
 
             # time.sleep(1)
             else:
