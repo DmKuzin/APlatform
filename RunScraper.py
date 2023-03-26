@@ -39,10 +39,14 @@ def read_latest_messages(server_id, channel_id):
     discord_listener.read_latest_messages()
 
 
+listeningPeriod = int(constants.LISTENING_PERIOD * 60 * 0.3)
+
 while True:
     try:
+        sys.stdout.flush()
         threads = []
-        for idx, row in from_discord_servers_table[:2].iterrows():
+        for idx, row in from_discord_servers_table.iterrows():
+            print(f'Server: {row["server_name"]} Channel: {row["channel_name"]}\n')
             t = threading.Thread(target=get_historical_messages, args=(row['server_id'], row['channel_id']))
             # Start both threads
             threads.append(t)
@@ -57,7 +61,7 @@ while True:
 
         while True:
             threads = []
-            for idx, row in from_discord_servers_table[:2].iterrows():
+            for idx, row in from_discord_servers_table.iterrows():
                 t = threading.Thread(target=read_latest_messages, args=(row['server_id'], row['channel_id']))
                 # Start both threads
                 threads.append(t)
@@ -69,13 +73,16 @@ while True:
             for t in threads:
                 t.join()
 
-            for _ in range(12):
+            for _ in range(listeningPeriod):
                 for cursor in '|/-\\':
                     sys.stdout.write('\rListening msg...{}'.format(cursor))
                     sys.stdout.flush()
                     time.sleep(0.3)
-    except(Exception) as error:
+    except Exception as error:
         print("Incorrect message format", error)
         continue
-    #break;
+    # break;
 
+# %%
+
+# %%

@@ -61,7 +61,7 @@ if authentication_status:
     # user availability to servers
     server_available_user = from_discord_servers_table['user_to_server_availability'] == username
     # Get server names
-    server_names = from_discord_servers_table[server_available_user]['server_name'].to_list()
+    server_names = list(set(from_discord_servers_table[server_available_user]['server_name'].to_list()))
     # Get channels from selected server
     server_selected = st.sidebar.selectbox("Servers", server_names, key='server_select')
     # Selected servers names

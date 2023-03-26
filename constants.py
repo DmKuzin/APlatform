@@ -2,7 +2,8 @@
 TO_GROUP_AUTHORIZATION_TOKEN: str = 'OTE1OTUxMTAwNzUyOTUzMzQ0.Gs18Go.1M-rqO_38uwkecEdAf-PGgrAPY9MMEd80zQzyU'
 
 # Platon token
-AUTHORIZATION_TOKEN: str = 'ODEwNTA1MDgzMzA4NzM2NTI0.GL5olG.WeYUW_4m5DGjyqRtHo2pfg3LW5jQ-gwltMvHds'
+#AUTHORIZATION_TOKEN: str = 'ODEwNTA1MDgzMzA4NzM2NTI0.GL5olG.WeYUW_4m5DGjyqRtHo2pfg3LW5jQ-gwltMvHds'
+AUTHORIZATION_TOKEN: str = 'OTE1OTUxMTAwNzUyOTUzMzQ0.Gs18Go.1M-rqO_38uwkecEdAf-PGgrAPY9MMEd80zQzyU'
 FROM_DISCORD_SERVERS_TABLE_PATH: str = 'Servers/servers_from_discord.csv'
 
 TO_GROUP_SERVERS_TABLE_PATH: str = 'Servers/servers_to_group.csv'
@@ -38,3 +39,5 @@ MESSAGE_TABLE_HEIGHT: int = 600
 MESSAGE_TABLE_WIDTH: int = 150
 
 IMAGE_LOGO_SIZE: int = 300
+
+LISTENING_PERIOD: float = 0.5  # listening period in minutes

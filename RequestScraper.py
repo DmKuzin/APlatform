@@ -187,6 +187,7 @@ class DiscordBot:
             messages = json.loads(response.text)
 
             if len(messages) > 0:
+                # print(messages)
                 message = messages[0]['content']
                 id = str(messages[0]['id'])
                 datetime = messages[0]['timestamp']
@@ -255,3 +256,5 @@ class DiscordBot:
             else:
                 break
         return message
+
+#%%
