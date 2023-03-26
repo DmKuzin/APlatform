@@ -175,6 +175,7 @@ class DiscordBot:
         """
         Continuously read the latest new message from the Discord channel.
         """
+        message = ''
         while True:
             params = {'limit': 1}
             # if self.last_message_id is not None:
@@ -247,8 +248,10 @@ class DiscordBot:
                                                           referenced_message_author_username)
                     # Save last message id
                     self.last_message_id = str(messages[0]['id'])
-                    #print(message)
+                    # print(message)
+                    # print(server_name)
 
             # time.sleep(1)
             else:
                 break
+        return message

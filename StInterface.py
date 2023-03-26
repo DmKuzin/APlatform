@@ -126,7 +126,7 @@ if authentication_status:
 
 
     # Bot for send message to group
-    @st.cache_resource
+    #@st.cache_resource
     def discord_bot():
         psql_conn = {'host': constants.POSTGRESQL_CONNECTION_HOST,
                      'database': constants.POSTGRESQL_CONNECTION_DATABASE,
