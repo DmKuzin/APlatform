@@ -153,8 +153,8 @@ class SQLMessageLogger:
 
         return df
 
-    def get_last_row_from_table(self, source_table):
-        sql = f"""SELECT * FROM {source_table} ORDER BY datetime DESC LIMIT 1;"""
+    def get_last_row_from_table(self, source_table, channel_name):
+        sql = f"""SELECT * FROM {source_table} WHERE channel_name='{channel_name}' ORDER BY datetime DESC LIMIT 1;"""
         # Open connection
         conn = psycopg2.connect(host=self.host,
                                 database=self.database,

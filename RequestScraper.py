@@ -27,7 +27,8 @@ class DiscordBot:
         self.server_name = self.get_server_name_from_table()
         self.channel_name = self.get_channel_name_from_table()
 
-        last_row = self.sql_msg_logger.get_last_row_from_table(constants.DISCORD_SQL_VIEW)
+        # Get last message_id for special channel
+        last_row = self.sql_msg_logger.get_last_row_from_table(constants.DISCORD_SQL_VIEW, self.channel_name)
         if len(last_row) > 0:
             self.last_message_id = str(last_row['id'].to_list()[0])
 
