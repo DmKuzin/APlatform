@@ -372,6 +372,9 @@ if authentication_status:
     def add_new_messages_from_discord():
         # with st.spinner('Reading messages...'):
         # state_discord_table = st.session_state.discord_table_key
+        last_row = discord_listener.sql_msg_logger.get_last_row_from_table(constants.DISCORD_SQL_VIEW, discord_listener.channel_name)
+        if len(last_row) > 0:
+            discord_listener.last_message_id = str(last_row['id'].to_list()[0])
         # Read the latest message
         discord_listener.read_latest_messages()
 
