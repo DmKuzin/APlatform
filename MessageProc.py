@@ -36,6 +36,23 @@ class SQLMessageLogger:
                         'referenced_message_channel_id',
                         'referenced_message_author_username']
 
+    def check_postgresql_connection(self):
+        conn_status = ''
+        try:
+            # Open connection
+            conn = psycopg2.connect(host=self.host,
+                                    database=self.database,
+                                    user=self.user,
+                                    password=self.password)
+
+            conn_status = True
+            conn.close()
+        except:
+            conn_status = False
+        finally:
+            return conn_status
+
+
     def log_data_to_table(self,
                           destination_table,
                           message,

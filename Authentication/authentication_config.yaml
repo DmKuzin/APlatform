@@ -3,9 +3,9 @@ credentials:
     dkuzin:
       email: dmitrkuzin@gmail.com
       name: Dmitriy Kuzin
-      password: '$2b$12$rIFwZOEW2nvjvLZ6TX.WLeTLXyyPtGWfSlMD5vexY2c7m83J6f.M6'
+      password: '$2b$12$K9BSGWGhu.rsPGqXl1LMBeF32byXyGeI7M.9MHz5rQMkBsIpf0hnq'
 cookie:
-  expiry_days: 30
+  expiry_days: 0
   key: random_signature_key
   name: random_cookie_name
 preauthorized:

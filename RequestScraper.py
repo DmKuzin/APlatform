@@ -27,10 +27,11 @@ class DiscordBot:
         self.server_name = self.get_server_name_from_table()
         self.channel_name = self.get_channel_name_from_table()
 
-        # Get last message_id for special channel
-        last_row = self.sql_msg_logger.get_last_row_from_table(constants.DISCORD_SQL_VIEW, self.channel_name)
-        if len(last_row) > 0:
-            self.last_message_id = str(last_row['id'].to_list()[0])
+        if self.sql_msg_logger.check_postgresql_connection():
+            # Get last message_id for special channel
+            last_row = self.sql_msg_logger.get_last_row_from_table(constants.DISCORD_SQL_VIEW, self.channel_name)
+            if len(last_row) > 0:
+                self.last_message_id = str(last_row['id'].to_list()[0])
 
     def get_channel_name_from_discord(self):
         channel_response = requests.get(f"https://discord.com/api/channels/{self.channel_id}", headers=self.headers)
