@@ -230,7 +230,7 @@ if authentication_status:
             # discord_builder.configure_column("message", {"width": 10})
             # discord_builder.configure_column('message', width=100)
             discord_builder.configure_side_bar()
-            discord_builder.configure_pagination(paginationPageSize=100)
+            discord_builder.configure_pagination(paginationAutoPageSize=False, paginationPageSize=100)
             go_discord = discord_builder.build()
             # go_discord['getRowStyle'] = jscode
 
@@ -262,7 +262,7 @@ if authentication_status:
             # analyse_builder.configure_grid_options(groupHeaderHeight=75)
             # analyse_builder.configure_column('message', width=100)
             analyse_builder.configure_side_bar()
-            analyse_builder.configure_pagination(paginationPageSize=100)
+            analyse_builder.configure_pagination(paginationAutoPageSize=False, paginationPageSize=100)
             go_analyse = analyse_builder.build()
 
             scroll = {'suppressScrollOnNewData': True}
