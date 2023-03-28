@@ -1,18 +1,16 @@
-#from typing import Dict
-#import time
+# from typing import Dict
+# import time
 from st_aggrid import AgGrid
-#from st_aggrid import GridOptionsBuilder, ColumnsAutoSizeMode, JsCode
+# from st_aggrid import GridOptionsBuilder, ColumnsAutoSizeMode, JsCode
 from st_aggrid import GridOptionsBuilder, JsCode
 import streamlit_authenticator as stauth
-#import pickle
+# import pickle
 import pandas as pd
 import streamlit as st
 import constants
 import RequestScraper
 import MessageProc
 import yaml
-
-
 
 # if 'discord_table_key' not in st.session_state:
 #     st.session_state['discord_table_key'] = None
@@ -70,13 +68,20 @@ if authentication_status:
     selected_server_names = from_discord_servers_table['server_name'] == server_selected
     # user availability to servers
     channel_available_user = from_discord_servers_table['user_to_channel_availability'] == username
-    #if sum(channel_available_user) > 0:
-    channels_available = from_discord_servers_table[selected_server_names & channel_available_user]['channel_name'].to_list()
+    # if sum(channel_available_user) > 0:
+    channels_available = from_discord_servers_table[selected_server_names & channel_available_user][
+        'channel_name'].to_list()
 
     server_id = \
-    from_discord_servers_table[from_discord_servers_table['server_name'] == server_selected]['server_id'].to_list()[0]
+        from_discord_servers_table[from_discord_servers_table['server_name'] == server_selected]['server_id'].to_list()[
+            0]
     # Set channels from selected server
     channel_selected = st.sidebar.selectbox("Channels", channels_available, key='channel_select')
+
+    # Read servers table from file
+    to_group_servers_table = pd.read_csv(constants.TO_GROUP_SERVERS_TABLE_PATH)
+    to_group_server_id = to_group_servers_table['server_id'].to_list()[0]
+    to_group_channel_id = to_group_servers_table['channel_id'].to_list()[0]
 
     st.sidebar.write(f'User: {name}')
     authenticator.logout('Logout', "sidebar")
@@ -84,33 +89,40 @@ if authentication_status:
     # Get channel id
     channel_id = None
     if channel_selected is not None:
-        channel_id = from_discord_servers_table[from_discord_servers_table['channel_name'] == channel_selected]['channel_id'].to_list()[0]
+        channel_id = from_discord_servers_table[from_discord_servers_table['channel_name'] == channel_selected][
+            'channel_id'].to_list()[0]
     else:
         st.warning('No available channels')
 
-    # --- CREATE DISCORD LISTENER ---
-    # Connection to database
-    psql_conn = {'host': constants.POSTGRESQL_CONNECTION_HOST,
-                 'database': constants.POSTGRESQL_CONNECTION_DATABASE,
-                 'user': constants.POSTGRESQL_CONNECTION_USER,
-                 'password': constants.POSTGRESQL_CONNECTION_PASSWORD}
-
-    # --- LOAD DATA FROM SQL TABLES ---
-
-    # Create message logger for discord
-    discord_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
-                                                  constants.POSTGRESQL_CONNECTION_DATABASE,
-                                                  constants.POSTGRESQL_CONNECTION_USER,
-                                                  constants.POSTGRESQL_CONNECTION_PASSWORD)
-    # Create message logger for analyse
-    analyse_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
-                                                  constants.POSTGRESQL_CONNECTION_DATABASE,
-                                                  constants.POSTGRESQL_CONNECTION_USER,
-                                                  constants.POSTGRESQL_CONNECTION_PASSWORD)
+    # --- CHECK CONNECTION ---
 
     with st.spinner('Connecting to database...'):
-        if discord_logger.check_postgresql_connection() and analyse_logger.check_postgresql_connection():
+        if MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
+                                        constants.POSTGRESQL_CONNECTION_DATABASE,
+                                        constants.POSTGRESQL_CONNECTION_USER,
+                                        constants.POSTGRESQL_CONNECTION_PASSWORD).check_postgresql_connection():
             st.success('Connection to database successful!', icon="🔗")
+
+            # --- CREATE DISCORD LOGGERS ---
+
+            # Create message logger for discord
+            discord_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
+                                                          constants.POSTGRESQL_CONNECTION_DATABASE,
+                                                          constants.POSTGRESQL_CONNECTION_USER,
+                                                          constants.POSTGRESQL_CONNECTION_PASSWORD)
+            # Create message logger for analyse
+            analyse_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
+                                                          constants.POSTGRESQL_CONNECTION_DATABASE,
+                                                          constants.POSTGRESQL_CONNECTION_USER,
+                                                          constants.POSTGRESQL_CONNECTION_PASSWORD)
+
+            # --- CREATE DISCORD LISTENER AND SENDER ---
+
+            # Connection to database
+            psql_conn = {'host': constants.POSTGRESQL_CONNECTION_HOST,
+                         'database': constants.POSTGRESQL_CONNECTION_DATABASE,
+                         'user': constants.POSTGRESQL_CONNECTION_USER,
+                         'password': constants.POSTGRESQL_CONNECTION_PASSWORD}
 
             # Create Discord channel listener
             discord_listener = RequestScraper.DiscordBot(constants.AUTHORIZATION_TOKEN,
@@ -118,15 +130,13 @@ if authentication_status:
                                                          channel_id,
                                                          psql_conn)
 
-            # Read servers table from file
-            to_group_servers_table = pd.read_csv(constants.TO_GROUP_SERVERS_TABLE_PATH)
-            to_group_server_id = to_group_servers_table['server_id'].to_list()[0]
-            to_group_channel_id = to_group_servers_table['channel_id'].to_list()[0]
-
+            # Create discord channel sender
             discord_sender = RequestScraper.DiscordBot(constants.TO_GROUP_AUTHORIZATION_TOKEN,
                                                        to_group_server_id,
                                                        to_group_channel_id,
                                                        psql_conn)
+
+            # --- LOAD DATA FROM SQL TABLES ---
 
             # Load data from SQL tables
             discord_data = discord_logger.load_data_from_table(constants.DISCORD_SQL_VIEW)
@@ -135,24 +145,7 @@ if authentication_status:
             analyse_data = analyse_logger.load_data_from_table(constants.ANALYSE_SQL_VIEW)
             analyse_data = analyse_data[analyse_data['channel_name'] == channel_selected]
 
-            # Bot for send message to group
-            #@st.cache_resource
-            def discord_bot():
-                psql_conn = {'host': constants.POSTGRESQL_CONNECTION_HOST,
-                             'database': constants.POSTGRESQL_CONNECTION_DATABASE,
-                             'user': constants.POSTGRESQL_CONNECTION_USER,
-                             'password': constants.POSTGRESQL_CONNECTION_PASSWORD}
-
-                return RequestScraper.DiscordBot(constants.TO_GROUP_AUTHORIZATION_TOKEN,
-                                                 to_group_server_id,
-                                                 to_group_channel_id,
-                                                 psql_conn)
-
-            # define the columns to be displayed
-            # visible_columns = ['message', 'author']
-            # cellStyle = {'color': 'rgba(184,185,191,255)',
-            #              "font-size": "16px",
-            #              }
+            # --- SETUP TABLE STYLE ---
 
             jscode_discord = JsCode("""
                         function(params) {
@@ -191,13 +184,8 @@ if authentication_status:
                             }
                         };
             """)
-            # try:
-            #     selected_row = st.session_state["discord_table_key"]["selectedItems"][0]["rowIndex"]
-            # except (KeyError, IndexError):
-            #     selected_row = 0
 
             # --- CONFIGURATE TABLES ---
-            selected_row = 0
 
             columns = ['message',
                        'id',
@@ -242,7 +230,7 @@ if authentication_status:
             # discord_builder.configure_column("message", {"width": 10})
             # discord_builder.configure_column('message', width=100)
             discord_builder.configure_side_bar()
-            discord_builder.configure_pagination()
+            discord_builder.configure_pagination(paginationPageSize=100)
             go_discord = discord_builder.build()
             # go_discord['getRowStyle'] = jscode
 
@@ -274,7 +262,7 @@ if authentication_status:
             # analyse_builder.configure_grid_options(groupHeaderHeight=75)
             # analyse_builder.configure_column('message', width=100)
             analyse_builder.configure_side_bar()
-            analyse_builder.configure_pagination()
+            analyse_builder.configure_pagination(paginationPageSize=100)
             go_analyse = analyse_builder.build()
 
             scroll = {'suppressScrollOnNewData': True}
@@ -286,7 +274,7 @@ if authentication_status:
             # @st.cache_data
             def submit_discord_messages_to_analyse():
                 state_discord_table = st.session_state.discord_table_key
-                #st.write(state_discord_table)
+                # st.write(state_discord_table)
 
                 if state_discord_table is not None:
                     selected_rows = state_discord_table['selectedItems']
@@ -295,7 +283,8 @@ if authentication_status:
 
                     # Set selected messages "to_analyse" status
                     update_status_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
-                    discord_logger.update_status_rows_from_table(constants.DISCORD_SQL_TABLE, update_status_list, MessageProc.MessageStatus.TO_ANALYSE.name)
+                    discord_logger.update_status_rows_from_table(constants.DISCORD_SQL_TABLE, update_status_list,
+                                                                 MessageProc.MessageStatus.TO_ANALYSE.name)
                     status_analyses = MessageProc.MessageStatus.ANALYSE.name
                     # Log selected messages to_analyse table
                     for idx, row in selected_rows_df.iterrows():
@@ -318,6 +307,7 @@ if authentication_status:
                                                          row['referenced_message_author_username'])
                 else:
                     st.warning('No selected messages for submit')
+
 
             # --- CALLBACK FUNCTIONS ---
 
@@ -352,7 +342,8 @@ if authentication_status:
                     else:
                         update_status_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
                         status_summ = MessageProc.MessageStatus.SUMMARIZED.name
-                        analyse_logger.update_status_rows_from_table(constants.ANALYSE_SQL_TABLE, update_status_list, status_summ)
+                        analyse_logger.update_status_rows_from_table(constants.ANALYSE_SQL_TABLE, update_status_list,
+                                                                     status_summ)
 
                     summary = st.session_state.text_area_summary
 
@@ -372,18 +363,20 @@ if authentication_status:
 
                     full_summary = out_text_body + 'Summary: ' + summary
                     # Send message to discord channel
-                    #discord_bot().send_message(full_summary)
+                    # discord_bot().send_message(full_summary)
                     discord_sender.send_message(full_summary)
                     # Log summary to table
                     analyse_logger.log_summary(constants.SUMMARY_SQL_TABLE, out_text_body, summary)
                 else:
                     st.warning('No selected messages for submit')
 
+
             # @st.cache_data(show_spinner='Reading messages...')
             def add_new_messages_from_discord():
                 # with st.spinner('Reading messages...'):
                 # state_discord_table = st.session_state.discord_table_key
-                last_row = discord_listener.sql_msg_logger.get_last_row_from_table(constants.DISCORD_SQL_VIEW, discord_listener.channel_name)
+                last_row = discord_listener.sql_msg_logger.get_last_row_from_table(constants.DISCORD_SQL_VIEW,
+                                                                                   discord_listener.channel_name)
                 if len(last_row) > 0:
                     discord_listener.last_message_id = str(last_row['id'].to_list()[0])
                 # Read the latest message
@@ -409,7 +402,7 @@ if authentication_status:
                                            height=constants.MESSAGE_TABLE_HEIGHT,
                                            width=constants.MESSAGE_TABLE_WIDTH,
                                            fit_columns_on_grid_load=True,
-                                           #columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
+                                           # columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
                                            reload_data=True,
                                            allow_unsafe_jscode=True,
                                            key='discord_table_key')
@@ -422,22 +415,21 @@ if authentication_status:
                         add_new_message_button = st.form_submit_button(label='Read new messages',
                                                                        on_click=add_new_messages_from_discord)
 
-                        #with left_col:
+                        # with left_col:
                         add_hist_mes_from_discord_button = st.form_submit_button(label='Read historical messages',
                                                                                  on_click=add_historical_messages_from_discord)
-                        #with right_col:
+                        # with right_col:
                         st.slider(label=':envelope_with_arrow: Number of read',
                                   min_value=constants.NUM_HISTORICAL_MESSAGE_MIN,
                                   max_value=constants.NUM_HISTORICAL_MESSAGE_MAX,
                                   value=constants.NUM_DEFAULT_HISTORICAL_MESSAGE,
                                   key='slider_number_of_messages_read'
-                                  #label_visibility='hidden'
-                        )
+                                  # label_visibility='hidden'
+                                  )
 
                     with col_submit_button:
                         submit_button_discord = st.form_submit_button(label='Submit selected',
                                                                       on_click=submit_discord_messages_to_analyse)
-
 
             with analyse_col:
                 st.header("Analyse")
@@ -447,14 +439,15 @@ if authentication_status:
                                            height=constants.MESSAGE_TABLE_HEIGHT,
                                            width=constants.MESSAGE_TABLE_WIDTH,
                                            fit_columns_on_grid_load=True,
-                                           #columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
+                                           # columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
                                            reload_data=True,
                                            allow_unsafe_jscode=True,
                                            key='analyse_table_key')
 
                     col_del_all_button, col_del_sel_button = st.columns(2, gap='small')
 
-                    del_button_analyse = st.form_submit_button(label='Delete selected messages', on_click=delete_analyse)
+                    del_button_analyse = st.form_submit_button(label='Delete selected messages',
+                                                               on_click=delete_analyse)
 
                     st.text_area(label='Summary', key='text_area_summary')
 
