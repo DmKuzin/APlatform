@@ -33,41 +33,55 @@ class DiscordBot:
             if len(last_row) > 0:
                 self.last_message_id = str(last_row['id'].to_list()[0])
 
-    def get_channel_name_from_discord(self):
-        channel_response = requests.get(f"https://discord.com/api/channels/{self.channel_id}", headers=self.headers)
-        if channel_response.status_code == 200:
-            channel_data = channel_response.json()
-            return channel_data["name"]
-        else:
-            return print(f"Error getting channel information: {channel_response.text}")
-
-    def get_server_name_from_discord(self):
-        server_response = requests.get(f"https://discord.com/api/guilds/{self.server_id}", headers=self.headers)
-        if server_response.status_code == 200:
-            server_data = server_response.json()
-            return server_data["name"]
-        else:
-            return print(f"Error getting server information: {server_response.text}")
+    # def get_channel_name_from_discord(self):
+    #     channel_response = requests.get(f"https://discord.com/api/channels/{self.channel_id}", headers=self.headers)
+    #     if channel_response.status_code == 200:
+    #         channel_data = channel_response.json()
+    #         return channel_data["name"]
+    #     else:
+    #         return print(f"Error getting channel information: {channel_response.text}")
+    #
+    # def get_server_name_from_discord(self):
+    #     server_response = requests.get(f"https://discord.com/api/guilds/{self.server_id}", headers=self.headers)
+    #     if server_response.status_code == 200:
+    #         server_data = server_response.json()
+    #         return server_data["name"]
+    #     else:
+    #         return print(f"Error getting server information: {server_response.text}")
 
     def get_server_name_from_table(self):
-        # Read servers table from file
+        # Read from discord servers table from file
         from_discord_servers_table = pd.read_csv(constants.FROM_DISCORD_SERVERS_TABLE_PATH)
         if sum(from_discord_servers_table['server_id'] == self.server_id) > 0:
             server_name = from_discord_servers_table[from_discord_servers_table['server_id'] == self.server_id][
                 'server_name'].to_list()[0]
             return server_name
-        else:
-            return print(f"Error getting server name")
+
+        # Read to group servers table from file
+        to_group_servers_table = pd.read_csv(constants.TO_GROUP_SERVERS_TABLE_PATH)
+        if sum(to_group_servers_table['server_id'] == self.server_id) > 0:
+            server_name = to_group_servers_table[to_group_servers_table['server_id'] == self.server_id][
+                'server_name'].to_list()[0]
+            return server_name
+
+        return print(f"Error getting server name")
 
     def get_channel_name_from_table(self):
-        # Read servers table from file
+        # Read from discord servers table from file
         from_discord_servers_table = pd.read_csv(constants.FROM_DISCORD_SERVERS_TABLE_PATH)
         if sum(from_discord_servers_table['channel_id'] == self.channel_id) > 0:
             channel_name = from_discord_servers_table[from_discord_servers_table['channel_id'] == self.channel_id][
                 'channel_name'].to_list()[0]
             return channel_name
-        else:
-            return print(f"Error getting channel name")
+
+        # Read to group servers table from file
+        to_group_servers_table = pd.read_csv(constants.TO_GROUP_SERVERS_TABLE_PATH)
+        if sum(to_group_servers_table['channel_id'] == self.channel_id) > 0:
+            channel_name = to_group_servers_table[to_group_servers_table['channel_id'] == self.channel_id][
+                'channel_name'].to_list()[0]
+            return channel_name
+
+        return print(f"Error getting channel name")
 
     def get_historical_messages(self, max_num=10):
         """
