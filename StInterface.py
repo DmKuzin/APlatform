@@ -63,7 +63,7 @@ if authentication_status:
     # Get server names
     server_names = list(set(from_discord_servers_table[server_available_user]['server_name'].to_list()))
     # Get channels from selected server
-    server_selected = st.sidebar.selectbox("Servers", server_names, key='server_select')
+    server_selected = st.sidebar.selectbox("💻 Servers", server_names, key='server_select')
     # Selected servers names
     selected_server_names = from_discord_servers_table['server_name'] == server_selected
     # user availability to servers
@@ -76,15 +76,15 @@ if authentication_status:
         from_discord_servers_table[from_discord_servers_table['server_name'] == server_selected]['server_id'].to_list()[
             0]
     # Set channels from selected server
-    channel_selected = st.sidebar.selectbox("Channels", channels_available, key='channel_select')
+    channel_selected = st.sidebar.selectbox("💬 Channels", channels_available, key='channel_select')
 
     # Read servers table from file
     to_group_servers_table = pd.read_csv(constants.TO_GROUP_SERVERS_TABLE_PATH)
     to_group_server_id = to_group_servers_table['server_id'].to_list()[0]
     to_group_channel_id = to_group_servers_table['channel_id'].to_list()[0]
 
-    st.sidebar.write(f'User: {name}')
-    authenticator.logout('Logout', "sidebar")
+    st.sidebar.write(f'👤 User: {name}')
+    authenticator.logout('Logout ➡️', "sidebar")
 
     # Get channel id
     channel_id = None
