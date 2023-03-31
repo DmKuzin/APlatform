@@ -3,6 +3,7 @@ import pandas as pd
 # import numpy as np
 from enum import Enum
 import psycopg2
+import streamlit as st
 
 
 class MessageStatus(Enum):
@@ -51,7 +52,6 @@ class SQLMessageLogger:
             conn_status = False
         finally:
             return conn_status
-
 
     def log_data_to_table(self,
                           destination_table,

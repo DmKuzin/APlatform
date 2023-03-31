@@ -460,4 +460,4 @@ if authentication_status:
                         st.checkbox(label='Delete selected after submit', key='delete_selected_after_submit')
 
         else:
-            st.error('Unable to connect to the database', icon='❌')
+            st.error('Unable to connect to the database', icon='🖇️')
