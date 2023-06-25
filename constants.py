@@ -2,7 +2,7 @@
 TO_GROUP_AUTHORIZATION_TOKEN: str = 'OTE1OTUxMTAwNzUyOTUzMzQ0.Gs18Go.1M-rqO_38uwkecEdAf-PGgrAPY9MMEd80zQzyU'
 
 # Platon token
-#AUTHORIZATION_TOKEN: str = 'ODEwNTA1MDgzMzA4NzM2NTI0.GL5olG.WeYUW_4m5DGjyqRtHo2pfg3LW5jQ-gwltMvHds'
+# AUTHORIZATION_TOKEN: str = 'ODEwNTA1MDgzMzA4NzM2NTI0.GL5olG.WeYUW_4m5DGjyqRtHo2pfg3LW5jQ-gwltMvHds'
 AUTHORIZATION_TOKEN: str = 'OTE1OTUxMTAwNzUyOTUzMzQ0.Gs18Go.1M-rqO_38uwkecEdAf-PGgrAPY9MMEd80zQzyU'
 FROM_DISCORD_SERVERS_TABLE_PATH: str = 'Servers/servers_from_discord.csv'
 
@@ -13,8 +13,8 @@ APP_LOGO_PATH: str = "logo/argonauts3.png"
 DISCORD_FILE_PATH: str = 'MessageLog/msg_table.pkl'
 ANALYSE_FILE_PATH: str = 'MessageLog/msg_analysis_table.pkl'
 
-POSTGRESQL_CONNECTION_HOST: str = 'localhost'
-#POSTGRESQL_CONNECTION_HOST: str = '16.170.252.123'
+# POSTGRESQL_CONNECTION_HOST: str = 'localhost'
+POSTGRESQL_CONNECTION_HOST: str = '16.170.252.123'  # AWS Public IPv4 address - open address
 POSTGRESQL_CONNECTION_DATABASE: str = 'postgres'
 POSTGRESQL_CONNECTION_USER: str = 'postgres'
 POSTGRESQL_CONNECTION_PASSWORD: str = 'qwerty'

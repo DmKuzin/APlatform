@@ -5,6 +5,7 @@ import time
 import constants
 import MessageProc
 import pandas as pd
+import sys
 
 
 class DiscordBot:
@@ -109,7 +110,9 @@ class DiscordBot:
                 scraped_msg.append(value)
                 last_historical_message_id = value['id']
                 num = num + 1
-                print(f'add historical message: {num}')
+                sys.stdout.write(f'\radd historical message: {num}')
+                sys.stdout.flush()
+                time.sleep(0.3)
 
             if num >= max_num:
                 break
@@ -268,7 +271,9 @@ class DiscordBot:
                     # Save last message id
                     self.last_message_id = str(messages[0]['id'])
                     msg_count += 1
-                    print(f'add {msg_count} message from server: {server_name}, channel: {channel_name}')
+                    sys.stdout.write(f'\radd {msg_count} message from server: {server_name}, channel: {channel_name}')
+                    sys.stdout.flush()
+                    time.sleep(0.3)
                     # print(message)
                     # print(server_name)
 

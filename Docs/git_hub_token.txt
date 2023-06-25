@@ -3,3 +3,5 @@ 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
 
 Команда для клонирования репозитория на AWS instance через персональный токен:
 git clone https://DmKuzin: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@github.com/DmKuzin/APlatform.git
+
+git clone https://DmKuzin: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@github.com/DmKuzin/APlatform.git
