@@ -272,14 +272,18 @@ class DiscordBot:
                     self.last_message_id = str(messages[0]['id'])
                     msg_count += 1
                     sys.stdout.write(f'\radd {msg_count} message from server: {server_name}, channel: {channel_name}')
-                    sys.stdout.flush()
-                    time.sleep(0.3)
+                    # sys.stdout.flush()
+                    # time.sleep(0.3)
                     # print(message)
                     # print(server_name)
 
             # time.sleep(1)
             else:
                 break
+
+        sys.stdout.flush()
+        time.sleep(0.3)
+
         return message
 
 #%%
