@@ -106,15 +106,15 @@ if authentication_status:
             # --- CREATE DISCORD LOGGERS ---
 
             # Create message logger for discord
-            discord_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
+            message_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
                                                           constants.POSTGRESQL_CONNECTION_DATABASE,
                                                           constants.POSTGRESQL_CONNECTION_USER,
                                                           constants.POSTGRESQL_CONNECTION_PASSWORD)
-            # Create message logger for analyse
-            analyse_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
-                                                          constants.POSTGRESQL_CONNECTION_DATABASE,
-                                                          constants.POSTGRESQL_CONNECTION_USER,
-                                                          constants.POSTGRESQL_CONNECTION_PASSWORD)
+            # # Create message logger for analyse
+            # analyse_logger = MessageProc.SQLMessageLogger(constants.POSTGRESQL_CONNECTION_HOST,
+            #                                               constants.POSTGRESQL_CONNECTION_DATABASE,
+            #                                               constants.POSTGRESQL_CONNECTION_USER,
+            #                                               constants.POSTGRESQL_CONNECTION_PASSWORD)
 
             # --- CREATE DISCORD LISTENER AND SENDER ---
 
@@ -139,10 +139,10 @@ if authentication_status:
             # --- LOAD DATA FROM SQL TABLES ---
 
             # Load data from SQL tables
-            discord_data = discord_logger.load_data_from_table(constants.DISCORD_SQL_VIEW)
+            discord_data = message_logger.load_data_from_table(constants.DISCORD_SQL_VIEW)
             discord_data = discord_data[discord_data['channel_name'] == channel_selected]
 
-            analyse_data = analyse_logger.load_data_from_table(constants.ANALYSE_SQL_VIEW)
+            analyse_data = message_logger.load_data_from_table(constants.ANALYSE_SQL_VIEW)
             analyse_data = analyse_data[analyse_data['channel_name'] == channel_selected]
 
             # --- SETUP TABLE STYLE ---
@@ -283,12 +283,12 @@ if authentication_status:
 
                     # Set selected messages "to_analyse" status
                     update_status_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
-                    discord_logger.update_status_rows_from_table(constants.DISCORD_SQL_TABLE, update_status_list,
+                    message_logger.update_status_rows_from_table(constants.DISCORD_SQL_TABLE, update_status_list,
                                                                  MessageProc.MessageStatus.TO_ANALYSE.name)
                     status_analyses = MessageProc.MessageStatus.ANALYSE.name
                     # Log selected messages to_analyse table
                     for idx, row in selected_rows_df.iterrows():
-                        analyse_logger.log_data_to_table(constants.ANALYSE_SQL_TABLE,
+                        message_logger.log_data_to_table(constants.ANALYSE_SQL_TABLE,
                                                          row['message'],
                                                          str(row['id']),
                                                          row['datetime'],
@@ -322,7 +322,7 @@ if authentication_status:
 
                     # Delete selected messages
                     del_ids_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
-                    analyse_logger.delete_rows_from_table(constants.ANALYSE_SQL_TABLE, del_ids_list)
+                    message_logger.delete_rows_from_table(constants.ANALYSE_SQL_TABLE, del_ids_list)
                 else:
                     st.warning('No selected messages for delete')
 
@@ -338,11 +338,11 @@ if authentication_status:
                     # Delete selected messages is set flag delete_selected_after_submit
                     if st.session_state.delete_selected_after_submit:
                         del_ids_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
-                        analyse_logger.delete_rows_from_table(constants.ANALYSE_SQL_TABLE, del_ids_list)
+                        message_logger.delete_rows_from_table(constants.ANALYSE_SQL_TABLE, del_ids_list)
                     else:
                         update_status_list = ",".join("'" + str(i) + "'" for i in selected_message_ids)
                         status_summ = MessageProc.MessageStatus.SUMMARIZED.name
-                        analyse_logger.update_status_rows_from_table(constants.ANALYSE_SQL_TABLE, update_status_list,
+                        message_logger.update_status_rows_from_table(constants.ANALYSE_SQL_TABLE, update_status_list,
                                                                      status_summ)
 
                     summary = st.session_state.text_area_summary
@@ -366,7 +366,7 @@ if authentication_status:
                     # discord_bot().send_message(full_summary)
                     discord_sender.send_message(full_summary)
                     # Log summary to table
-                    analyse_logger.log_summary(constants.SUMMARY_SQL_TABLE, out_text_body, summary)
+                    message_logger.log_summary(constants.SUMMARY_SQL_TABLE, out_text_body, summary)
                 else:
                     st.warning('No selected messages for submit')
 

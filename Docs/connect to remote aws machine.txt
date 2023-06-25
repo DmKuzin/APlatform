@@ -1,0 +1,45 @@
+C:\Accenture_work\Project\APlatform\SSH_key
+команда для защищённого соединения с AWS instance
+ssh -i our_streamlite_key.pem ec2-user@ec2-16-171-38-36.eu-north-1.compute.amazonaws.com
+
+Порядок запуска сервиса:
+
+1)Команда для активации окружения:
+source /opt/Python-3.9.16/env/bin/activate
+
+2)Создание новой tmux сессии (для того, чтобы можно было закрыть терминал и при этом программа осталась работать)
+сначала создаём сессию, потом запускаем streamlit
+tmux new -s StreamSession
+
+3)Команда для запуска Streamlit app:
+streamlit run StInterface.py
+
+Для просмотра tmux сессий
+tmux ls
+для остановки сессии
+tmux kill-session -t session_name
+
+Для входа в сессию после отключения
+tmux attach-session -t session_name
+
+Команды для vim:
+
+вход(или создание) в файл: vim file_name
+переход в режим редактирования: a
+выход из режима редактирования: esc
+выход с сохранением: нужно выйти из режима редактирования, затем нажать: :wq + enter
+выход без сохранения: нужно выйти из режима редактирования, затем нажать: :q + enter
+
+
+Для того чтобы залогироваться через терминал в PostgreSQL:
+1) sudo su - postgres - залогинились
+2) psql - вошли в postgres
+3) \du - List of roles Role name Attributes
+4) alter user postgres password 'qwerty'; - создаём пароль для пользователя postgres пароль qwerty
+5) sudo vi /var/lib/pgsql/data/postgresql.conf - для редактирования конфигурационного файла postgresql
+6) sudo vi /var/lib/pgsql/data/pg_hba.conf - для редактирования конфиг файла подключений, сюда вводим ip адреса пользователей, которые могут подключаться удаленно
+вводим: host    all          all            0.0.0.0/0  md5 - для подключения любых пользователей к любой дб на инстансе
+
+172.31.45.217
+
+192.168.0.102

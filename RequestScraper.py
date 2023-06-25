@@ -64,7 +64,7 @@ class DiscordBot:
                 'server_name'].to_list()[0]
             return server_name
 
-        return print(f"Error getting server name")
+        return 'unknown_server_name'
 
     def get_channel_name_from_table(self):
         # Read from discord servers table from file
@@ -81,7 +81,7 @@ class DiscordBot:
                 'channel_name'].to_list()[0]
             return channel_name
 
-        return print(f"Error getting channel name")
+        return 'unknown_channel_name'
 
     def get_historical_messages(self, max_num=10):
         """

@@ -1,0 +1,114 @@
+Настройка EC2 Instance дял работы Streamlit и PostgreSQL + удалённый доступ к БД через DBeaver 
+__________________________
+
+
+Security groups
+
+IP version      Type      Protocol    Port range      Source          Description
+ IPv4	          SSH	    TCP	     22	     0.0.0.0/0	    general connection
+ IPv4	       Custom TCP     TCP	    8501         0.0.0.0/0        streamlit
+ IPv4        PostgreSQL	    TCP	    5432	     0.0.0.0/0 	    postgre database
+
+
+
+Install PostgreSQL on Amazon Linux
+____________________________________
+
+
+Step 1: Let’s upgrade the system Yum packages.
+
+sudo yum update -y
+
+Step 2: PostgreSQL is part of the amazon extras library. Install the PostgreSQL amazon extras repository. At the time of writing, PostgreSQL 14 is the latest package available in the extras library.
+
+sudo amazon-linux-extras enable postgresql14
+
+Step 3: Install the PostgreSQL server.
+
+sudo yum install postgresql-server -y
+
+Step 4: Initialize the DB.
+
+sudo postgresql-setup initdb
+
+Step 5: Add the PostgreSQL service to the system startup.
+
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+Step 6: Check the status of PostgreSQL using the following command.
+
+sudo systemctl status postgresql
+
+
+
+Set Password For Postgres User
+____________________________________
+
+Step 7: login to the database using the following command.
+
+sudo -u postgres psql
+
+Step 8: Set the password for the Postgres user so that we can use it to log in remotely. Replace myPassword with the required password.
+
+ALTER USER postgres PASSWORD 'myPassword';
+
+
+Enable Remote Connection For PostgreSQL on Amazon Linux
+__________________________________________________________
+
+Step 9: Open the postgresql.conf file in the vi editor.
+
+sudo vi /var/lib/pgsql/data/postgresql.conf
+
+	a) Locate the line that starts with “listen_addresses“. 
+	b) Uncomment and change it to “listen_addresses = ‘*’“. This will allow connections from any IP address.
+
+	Команды для vim:
+
+		вход(или создание) в файл: vim file_name
+		переход в режим редактирования: a
+		выход из режима редактирования: esc
+		выход с сохранением: нужно выйти из режима редактирования, затем нажать: :wq + enter
+		выход без сохранения: нужно выйти из режима редактирования, затем нажать: :q + enter
+
+
+Step 10: Next, open /var/lib/pgsql/data/pg_hba.conf file
+
+sudo vi /var/lib/pgsql/data/pg_hba.conf
+
+	a) Add the following to the end of the file to allow client connections to all databases.
+	host    all          all            0.0.0.0/0  md5
+
+Step 11: To apply all the changes, restart the PostgreSQL service using the following command.
+
+sudo systemctl restart postgresql
+
+
+
+Подключение к PostgreSQL чере DBeaver
+_________________________________________
+
+
+Step 1: На вкладке Main
+	a) Connect by: Host
+	b) Host: ec2 Public IPv4 address (16.170.250.163) Port: 5432
+	c) Database: postgres (БД по умолчанию при установке)
+	d) Authentication: Database Native
+	e) Username postgres (username по умолчанию при установке)
+	f) Password: myPassword (password, который устанавливали при установке БД)
+
+Step 2: На вкладке SSH 
+	a) Use SSH Tunnel
+	b) Host/IP: ec2 Public IPv4 address (16.170.250.163) Port: 22
+	d) User Name: ec2-user (имя пользователя при создании ec2 instance)
+	e) Authentication Method: Public Key
+	f) Privet Key: выбираем путь до закрытого ключа (файл *.pem), который создаётся при создании ec2 instance
+
+
+
+
+
+
+
+
