@@ -109,6 +109,7 @@ class DiscordBot:
                 scraped_msg.append(value)
                 last_historical_message_id = value['id']
                 num = num + 1
+                print(f'add historical message: {num}')
 
             if num >= max_num:
                 break
@@ -192,6 +193,7 @@ class DiscordBot:
         Continuously read the latest new message from the Discord channel.
         """
         message = ''
+        msg_count = 0
         while True:
             params = {'limit': 1}
             # if self.last_message_id is not None:
@@ -265,6 +267,8 @@ class DiscordBot:
                                                           referenced_message_author_username)
                     # Save last message id
                     self.last_message_id = str(messages[0]['id'])
+                    msg_count += 1
+                    print(f'add {msg_count} message from server: {server_name}, channel: {channel_name}')
                     # print(message)
                     # print(server_name)
 
